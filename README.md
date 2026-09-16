@@ -4,7 +4,7 @@
 
 ## 在线演示
 
-https://sanshuiyouxi.zxiehuan898572.chatgpt.site
+https://hfddth.github.io/sanshuiyouxi/
 
 当前上线的是前端演示版本；AI 生成等功能需要单独接入后端服务。
 
