@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f1e9" />
+  <meta name="description" content="山河入戏 · 文旅IP剧本游策划智能体" />
+  <title>山河入戏 · 文旅IP剧本游策划智能体</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <header class="app-header desktop-only">
+    <button class="brand" data-nav="home" aria-label="返回首页">
+      <span class="brand-symbol" aria-hidden="true">
+        <svg viewBox="0 0 54 54"><path d="M5 38c8-3 13-14 19-25 5 8 7 12 10 17 4-5 7-10 10-15 4 7 6 14 7 23"/><path d="M7 42c13-4 26-5 40-1"/><circle cx="38" cy="11" r="4"/></svg>
+      </span>
+      <span class="brand-copy"><b>山河入戏</b><small>文旅 IP 剧本游策划智能体</small></span>
+    </button>
+
+    <nav class="main-nav" aria-label="主导航">
+      <button class="active" data-nav="home">开始策划</button>
+      <button data-nav="studio">智能体工作台</button>
+      <button data-nav="project">项目档案</button>
+      <button data-nav="library">项目库</button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="mode-pill" id="modeBtn"><span class="status-dot"></span><span id="modeText">演示模式</span></button>
+      <button class="round-btn" id="settingsBtn" aria-label="开发设置">⚙</button>
+    </div>
+  </header>
+
+  <header class="mobile-topbar mobile-only">
+    <button class="mobile-brand" data-nav="home">
+      <span class="brand-symbol mini"><svg viewBox="0 0 54 54"><path d="M5 38c8-3 13-14 19-25 5 8 7 12 10 17 4-5 7-10 10-15 4 7 6 14 7 23"/><path d="M7 42c13-4 26-5 40-1"/><circle cx="38" cy="11" r="4"/></svg></span>
+      <span><b>山河入戏</b><small>文旅智能体</small></span>
+    </button>
+    <button class="mode-pill small" id="mobileModeBtn"><span class="status-dot"></span><span>Demo</span></button>
+  </header>
+
+  <main id="app">
+    <!-- HOME -->
+    <section class="view active" id="view-home">
+      <section class="home-hero">
+        <div class="home-grid">
+          <div class="hero-copy">
+            <div class="eyebrow"><span></span>AI AGENT × CULTURE × SPACE × PLAY</div>
+            <h1>把一个真实景区，<br/><span>变成一段可以走进去的故事。</span></h1>
+            <p>面向景区、古村、街区与文博空间。输入景区名称、地图与已有资料，Agent 自主完成文化检索、IP 策划、世界观、角色、剧情、游线、任务、线索、互动机制、视觉资产方案与自动审查。</p>
+            <div class="hero-actions">
+              <button class="primary-btn large" id="heroStartBtn">创建一个文旅项目 <span>→</span></button>
+              <button class="ghost-btn large" data-open-demo>查看完整案例</button>
+            </div>
+            <div class="hero-proof">
+              <div><b>01</b><span>真实文化<br/><small>RAG grounding</small></span></div>
+              <div><b>02</b><span>真实空间<br/><small>Map vision</small></span></div>
+              <div><b>03</b><span>可玩故事<br/><small>Playable design</small></span></div>
+              <div><b>04</b><span>持续编辑<br/><small>Project DB</small></span></div>
+            </div>
+          </div>
+
+          <div class="hero-visual" aria-hidden="true">
+            <div class="sun"></div>
+            <div class="mist m1"></div><div class="mist m2"></div>
+            <svg viewBox="0 0 760 570" role="presentation">
+              <defs><linearGradient id="water" x1="0" x2="1"><stop offset="0" stop-color="#dfe9e3"/><stop offset="1" stop-color="#a9c6bb"/></linearGradient></defs>
+              <path class="mountain far" d="M38 342 Q131 166 229 342 M181 343 Q304 86 432 344 M413 334 Q538 139 680 335"/>
+              <path class="mountain near" d="M350 349 Q450 210 520 334 M485 340 Q584 155 711 338"/>
+              <path class="river" d="M379 566 C356 499 371 445 421 405 C472 364 561 376 584 326 C607 274 548 238 591 188"/>
+              <g class="pavilion" transform="translate(520 302)"><path d="M0 66h132M12 66V33h108v33M27 33V13h78v20M18 34l48-29 48 29M37 13L66-5l29 18M34 66V43M64 66V43M94 66V43"/></g>
+              <g class="trees" transform="translate(640 269)"><circle cx="0" cy="0" r="17"/><circle cx="18" cy="-9" r="13"/><circle cx="34" cy="5" r="15"/><path d="M18 5v67"/></g>
+              <g class="boat" transform="translate(338 474)"><path d="M0 13q38 31 94 0Q74 43 21 38z"/><path d="M49 10V-12M38-12q12-13 23 0"/></g>
+              <g class="birds"><path d="M573 95q10-9 20 0M628 73q9-8 18 0M679 107q8-7 16 0"/></g>
+            </svg>
+            <div class="hero-caption"><span>山水纸境</span><small>让文化成为故事，让空间成为玩法。</small></div>
+            <div class="floating-card fc1"><small>真实文化</small><b>RAG 检索</b><span>来源可追溯</span></div>
+            <div class="floating-card fc2"><small>真实空间</small><b>地图理解</b><span>剧情绑定点位</span></div>
+          </div>
+        </div>
+
+        <div class="create-shell" id="createSection">
+          <div class="create-card">
+            <div class="create-heading">
+              <div><small>CREATE A NEW PROJECT</small><h2>从一个真实景区开始</h2><p>你只需要提供必要输入。其余流程由 Agent 自主规划。</p></div>
+              <span class="step-chip">01 / 项目输入</span>
+            </div>
+
+            <div class="form-grid">
+              <label class="field wide"><span>景区 / 古村 / 街区名称</span><div class="input-wrap"><i>⌖</i><input id="scenicInput" value="楠溪江 · 芙蓉古村" placeholder="例如：楠溪江 · 芙蓉古村"/></div></label>
+              <label class="field"><span>目标游客</span><select id="audienceSelect"><option>年轻游客</option><option>亲子家庭</option><option>研学团队</option><option>大众游客</option></select></label>
+              <label class="field"><span>预期游玩时长</span><select id="durationSelect"><option>90–120 分钟</option><option>60–90 分钟</option><option>120–180 分钟</option><option>半日体验</option></select></label>
+            </div>
+
+            <div class="preference-row">
+              <span>创作偏好</span>
+              <div class="choice-chips" id="styleChips">
+                <button class="active" data-style="悬疑探索">悬疑探索</button><button data-style="东方奇幻">东方奇幻</button><button data-style="历史穿越">历史穿越</button><button data-style="民俗传奇">民俗传奇</button><button data-style="由 AI 推荐">由 AI 推荐</button>
+              </div>
+            </div>
+
+            <div class="upload-grid">
+              <label class="dropzone" id="mapDropzone"><input id="mapUpload" type="file" accept="image/*,.pdf" hidden/><span class="drop-icon">＋</span><span><b>上传景区地图</b><small id="mapFileName">可选 · JPG / PNG / PDF</small></span><em>用于建立真实空间模型</em></label>
+              <label class="dropzone"><input id="materialUpload" type="file" multiple accept=".pdf,.doc,.docx,.txt,.md,image/*" hidden/><span class="drop-icon">＋</span><span><b>上传景区资料</b><small id="materialFileName">历史、非遗、景点说明等</small></span><em>用于补充文化证据</em></label>
+            </div>
+
+            <div class="create-footer">
+              <div class="privacy-note"><span>✓</span> 演示版所有数据保存在本机浏览器，不上传服务器。</div>
+              <div class="create-actions"><button class="ghost-btn" id="exampleBtn">载入比赛案例</button><button class="primary-btn" id="startBtn">让 Agent 开始策划 <span>→</span></button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block audience-section">
+        <div class="section-title horizontal"><div><small>WHO USES IT</small><h2>不是游客导览工具，而是文旅项目策划与生产工作台。</h2></div><p>面向文旅管理者、景区运营团队、文创策划公司与高校项目团队。</p></div>
+        <div class="persona-grid">
+          <article><span>景区运营方</span><h3>把已有文化资源转成可玩的内容</h3><p>减少从“景点资料”到“可落地体验方案”的策划成本。</p></article>
+          <article><span>文旅策划公司</span><h3>更快完成 IP、剧本、游线与任务系统</h3><p>让 AI 处理资料梳理、结构化输出和版本迭代。</p></article>
+          <article><span>古村 / 街区</span><h3>用真实空间承载故事，而不是凭空造景</h3><p>把入口、古宅、广场、河岸等真实点位变成剧情节点。</p></article>
+          <article><span>高校 / 创业团队</span><h3>快速形成可展示、可验证的文旅创新原型</h3><p>从比赛 Demo 直接过渡到真实 API 与落地部署。</p></article>
+        </div>
+      </section>
+
+      <section class="section-block output-section">
+        <div class="section-title"><small>WHAT YOU GET</small><h2>不是生成一篇文案，而是生成一套可持续修改的文旅项目资产。</h2></div>
+        <div class="deliverable-grid">
+          <article><span>01</span><i>◇</i><h3>IP 与世界观</h3><p>IP 名称、核心概念、角色关系、世界规则与故事主线。</p></article>
+          <article><span>02</span><i>⌖</i><h3>真实空间剧本地图</h3><p>剧情节点、真实点位、游线与游客行动被绑定到同一张图上。</p></article>
+          <article><span>03</span><i>⌘</i><h3>任务与线索系统</h3><p>每个任务具有目标、触发条件、线索、NPC 与互动方式。</p></article>
+          <article><span>04</span><i>▦</i><h3>视觉资产任务</h3><p>角色、封面、剧情插画、手绘地图自动形成生图任务队列。</p></article>
+          <article><span>05</span><i>文</i><h3>文化证据层</h3><p>真实文化、真实空间与剧情虚构明确分层，降低事实混淆。</p></article>
+          <article><span>06</span><i>✓</i><h3>AI 自动审查</h3><p>检查逻辑、可玩性、空间合理性、文化真实性与实施可行性。</p></article>
+        </div>
+      </section>
+
+      <section class="section-block workflow-section">
+        <div class="section-title horizontal"><div><small>AGENT WORKFLOW</small><h2>一次输入，Agent 自主完成完整策划链。</h2></div><p>用户只在真正影响方向的节点参与决策，其余步骤自动执行。</p></div>
+        <div class="workflow-track"><span>景区输入</span><b>→</b><span>地图理解</span><b>→</b><span>文化检索</span><b>→</b><span>IP 策划</span><b>→</b><span>剧情 × 空间</span><b>→</b><span>任务与线索</span><b>→</b><span>视觉资产</span><b>→</b><span>审查修正</span><b>→</b><span>项目档案</span></div>
+      </section>
+
+      <section class="section-block compare-section">
+        <div class="compare-card">
+          <div class="compare-left"><small>NOT A CHATBOT</small><h2>它和普通“AI 写剧本”最大的区别，是把文化、空间和玩法组织成一个项目。</h2></div>
+          <div class="compare-columns">
+            <article class="bad"><b>普通 AI</b><p>输入景区 → 生成一篇故事 → 结束</p></article>
+            <article class="good"><b>山河入戏 Agent</b><p>文化 → 空间 → 剧情 → 任务 → 线索 → 玩家行为 → 审查 → 项目资产</p></article>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- STUDIO -->
+    <section class="view" id="view-studio">
+      <div class="studio-shell">
+        <aside class="pipeline-sidebar desktop-only">
+          <div class="current-project"><div class="project-emblem">楠</div><div><small>当前项目</small><b id="projectScenicName">楠溪江 · 芙蓉古村</b><span>YJ-AGENT-001</span></div></div>
+          <div class="side-label">AGENT PIPELINE</div>
+          <ol id="pipeline" class="pipeline"></ol>
+          <div class="autonomy-card"><span class="live-dot"></span><div><b>自主规划模式</b><small>仅在关键决策时打断</small></div></div>
+        </aside>
+
+        <div class="studio-main">
+          <header class="studio-header">
+            <div><small>PROJECT STUDIO / YJ-AGENT-001</small><h1>AI 正在把景区变成一个可玩的故事</h1><p id="studioSubtitle">Agent 正在理解你的景区输入并规划后续任务。</p></div>
+            <div class="studio-head-actions"><span class="runtime-pill"><span class="live-dot"></span><b id="agentStatus">运行中</b></span><button class="ghost-btn compact" id="cancelRunBtn">暂停</button></div>
+          </header>
+
+          <section class="progress-card">
+            <div class="progress-head"><div><span>项目完成度</span><b id="progressText">12%</b></div><span id="currentStageText">正在创建结构化项目档案…</span></div>
+            <div class="progress-track"><div id="progressBar" style="width:12%"></div></div>
+            <div class="stage-tags" id="stageTags"></div>
+          </section>
+
+          <div class="studio-grid">
+            <section class="panel activity-panel">
+              <div class="panel-head"><div><small>AGENT ACTIVITY</small><h2>智能体执行记录</h2></div><span id="activityCount">0 条记录</span></div>
+              <div class="activity-stream" id="activityStream"></div>
+              <div class="agent-thinking"><span class="thinking-dot"></span><span>Agent 会根据项目状态动态决定下一步，而不是机械执行固定问答。</span></div>
+            </section>
+
+            <div class="right-stack">
+              <section class="panel tool-panel"><div class="panel-head"><div><small>TOOLS & SKILLS</small><h2>工具调用</h2></div></div><div id="toolList" class="tool-list"></div></section>
+              <section class="panel evidence-panel"><div class="panel-head"><div><small>GROUNDING</small><h2>生成依据</h2></div></div><div id="evidenceList" class="evidence-list"></div></section>
+              <section class="panel mini-architecture"><div class="panel-head"><div><small>RUNTIME</small><h2>执行架构</h2></div></div><div class="arch-flow"><span>用户输入</span><b>→</b><span>Main Agent</span><b>→</b><span>Skills / Tools</span><b>→</b><span>Project DB</span></div></section>
+            </div>
+          </div>
+
+          <section class="decision-panel" id="decisionPanel" hidden>
+            <div class="decision-intro"><small>KEY DECISION / 01</small><h2>Agent 已完成前置分析，请你选择一个 IP 方向</h2><p>这是生成过程中的关键决策点。选择后，世界观、角色、剧情、游线、任务与线索将自动继续。</p></div>
+            <div class="ip-option-grid" id="ipOptions"></div>
+            <div class="decision-footer"><div><b>为什么只让你选一次？</b><span>专业生成交给 Agent，用户只负责真正影响项目方向的决定。</span></div><button class="primary-btn" id="confirmDirection">确认方向并继续生成 <span>→</span></button></div>
+          </section>
+
+          <section class="completion-panel" id="completionPanel" hidden>
+            <span class="completion-icon">✓</span><div><small>PROJECT READY</small><h2>完整文旅项目已生成</h2><p>世界观、角色、剧情地图、任务、线索、文化证据、视觉资产任务和 AI 审查均已写入项目档案。</p></div><button class="primary-btn" id="openProjectBtn">打开完整项目 <span>→</span></button>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECT -->
+    <section class="view" id="view-project">
+      <div class="project-shell">
+        <header class="project-hero">
+          <div class="project-cover" aria-hidden="true"><span class="cover-sun"></span><span class="cover-mountain one"></span><span class="cover-mountain two"></span><span class="cover-water"></span><b>七星照影</b><small>THE SEVEN STARS REFLECTION</small></div>
+          <div class="project-meta">
+            <div class="breadcrumb">PROJECT / YJ-AGENT-001 / V1.0</div>
+            <div class="project-title-line"><h1 id="projectTitle">《七星照影》</h1><span class="complete-badge">已完成</span></div>
+            <p id="projectSubtitle">楠溪江 · 芙蓉古村 · 悬疑探索</p>
+            <div class="project-tags" id="projectTagSummary"><span>7 个剧情节点</span><span>8 个任务</span><span>8 条线索</span><span>4 位角色</span></div>
+          </div>
+          <div class="project-actions"><button class="ghost-btn" id="modifyBtn">继续修改</button><button class="ghost-btn" id="exportBtn">导出 JSON</button><button class="ghost-btn" id="printBtn">打印方案</button><button class="primary-btn compact" id="shareBtn">生成演示链接 <span>→</span></button></div>
+        </header>
+
+        <nav class="project-tabs" id="projectTabs">
+          <button class="active" data-project-tab="overview">项目总览</button>
+          <button data-project-tab="map">剧本地图</button>
+          <button data-project-tab="ip">IP 世界观</button>
+          <button data-project-tab="characters">角色关系</button>
+          <button data-project-tab="plot">剧情结构</button>
+          <button data-project-tab="tasks">任务系统</button>
+          <button data-project-tab="clues">线索链</button>
+          <button data-project-tab="culture">文化植入</button>
+          <button data-project-tab="visitor">游客端预览</button>
+          <button data-project-tab="assets">视觉资产</button>
+          <button data-project-tab="implementation">落地实施</button>
+          <button data-project-tab="review">AI 审查</button>
+        </nav>
+        <div id="projectContent"></div>
+      </div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="view" id="view-library">
+      <div class="library-shell">
+        <header class="library-header"><div><small>PROJECT LIBRARY</small><h1>项目库</h1><p>保存每一个可持续修改的结构化文旅项目，而不是一段聊天记录。</p></div><button class="primary-btn" data-nav="home">＋ 新建项目</button></header>
+        <div class="library-stats"><article><small>项目总数</small><b>3</b></article><article><small>已完成</small><b>2</b></article><article><small>策划中</small><b>1</b></article><article><small>视觉资产</small><b>18</b></article></div>
+        <div class="project-library-grid">
+          <article class="library-card featured" data-open-demo><div class="library-cover lc1"><span>七星照影</span></div><div class="library-copy"><span class="tiny-status done">已完成</span><h3>《七星照影》</h3><p>楠溪江 · 芙蓉古村 / 悬疑探索</p><div><span>7 节点</span><span>8 任务</span><span>92 分</span></div></div></article>
+          <article class="library-card"><div class="library-cover lc2"><span>山水秘约</span></div><div class="library-copy"><span class="tiny-status running">策划中</span><h3>《山水秘约》</h3><p>楠溪江 · 岩头古村 / 东方奇幻</p><div><span>4/11 阶段</span><span>43%</span></div></div></article>
+          <article class="library-card"><div class="library-cover lc3"><span>溪山旧信</span></div><div class="library-copy"><span class="tiny-status done">已完成</span><h3>《溪山旧信》</h3><p>永嘉书院 / 历史探索</p><div><span>6 节点</span><span>7 任务</span><span>89 分</span></div></div></article>
+          <button class="new-project-card" data-nav="home"><span>＋</span><b>创建新的景区项目</b><small>输入景区名称，开始一次完整策划</small></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-bottom-nav mobile-only" aria-label="移动端导航">
+    <button class="active" data-nav="home"><span>⌂</span><small>开始</small></button><button data-nav="studio"><span>◌</span><small>智能体</small></button><button data-nav="project"><span>▱</span><small>项目</small></button><button data-nav="library"><span>□</span><small>项目库</small></button>
+  </nav>
+
+  <div class="modal-backdrop" id="settingsModal" hidden>
+    <section class="modal-card">
+      <button class="modal-close" data-close-modal>×</button><small>DEVELOPER SETTINGS</small><h2>后端接入设置</h2><p>前端默认使用完整演示数据。后续接入 Railway / Node.js 后，将 API 地址填在这里即可切换真实模式。</p>
+      <label class="field"><span>API Base URL</span><input id="apiBaseInput" placeholder="https://your-api.up.railway.app"/></label>
+      <div class="api-test-row"><button class="ghost-btn compact" id="testApiBtn">测试连接</button><span id="apiTestResult">尚未测试</span></div>
+      <div class="setting-note"><b>安全提示</b><span>大模型与图片 API Key 只能放在后端环境变量中，不要写入 HTML / JS 或提交到 GitHub。</span></div>
+      <div class="modal-actions"><button class="ghost-btn" id="clearApiBtn">恢复演示模式</button><button class="primary-btn" id="saveApiBtn">保存设置</button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="modifyModal" hidden>
+    <section class="modal-card modify-card">
+      <button class="modal-close" data-close-modal>×</button><small>NATURAL LANGUAGE EDIT</small><h2>告诉 Agent 你想改哪里</h2><p>Agent 会判断影响范围，只重新生成受影响模块，并保留其他内容。</p>
+      <div class="quick-prompts"><button>把反派改得更有神秘感</button><button>古街这一段再加强悬疑</button><button>把 NFC 互动改成 AR</button><button>增加永嘉文化植入</button></div>
+      <textarea id="modifyInput" rows="5" placeholder="例如：第三个任务太像答题了，改成需要观察建筑细节才能完成的解谜，同时保留现有剧情主线。"></textarea>
+      <div class="impact-preview" id="impactPreview"><b>预计影响范围</b><span>等待输入修改要求…</span></div>
+      <div class="modal-actions"><button class="ghost-btn" data-close-modal>取消</button><button class="primary-btn" id="applyModifyBtn">分析并应用修改 <span>→</span></button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="assetModal" hidden>
+    <section class="modal-card asset-modal-card">
+      <button class="modal-close" data-close-modal>×</button><small>VISUAL ASSET TASK</small><h2 id="assetModalTitle">视觉资产</h2><p id="assetModalDesc">查看生图任务与提示词。</p>
+      <div class="asset-prompt-box"><span>Prompt</span><p id="assetPromptText"></p></div>
+      <div class="asset-provider-row"><span>推荐模型</span><b>Seedream / GPT Image / 兼容生图 API</b></div>
+      <div class="modal-actions"><button class="ghost-btn" data-close-modal>关闭</button><button class="primary-btn" id="assetModalGenerate">生成演示预览 <span>→</span></button></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+
