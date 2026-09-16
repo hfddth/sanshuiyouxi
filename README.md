@@ -2,6 +2,12 @@
 
 这是一个用于“AI Agent × 文旅”比赛展示与后续真实开发的前端原型。
 
+## 在线演示
+
+https://sanshuiyouxi.zxiehuan898572.chatgpt.site
+
+当前上线的是前端演示版本；AI 生成等功能需要单独接入后端服务。
+
 ## 当前版本 V2
 
 已包含：
