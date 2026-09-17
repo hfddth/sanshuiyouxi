@@ -28,6 +28,7 @@
       let value = row?.payload;
       if (!value) { try { value = JSON.parse(localStorage.getItem('yongjia_demo_project')); } catch { return; } }
       state.project = { ...structuredClone(demoProject), ...value, storageId: row?.id || value.storageId || null, storageOwnerId: row ? signedInUser.id : value.storageOwnerId || null };
+      state.hasProject = true;
       state.scenic = state.project.scenic || state.scenic;
       state.audience = state.project.audience || state.audience;
       state.duration = state.project.duration || state.duration;
@@ -54,7 +55,7 @@
     $('#cloudBtn').textContent = signedInUser ? '云端已连接' : '云端账号';
   }
   async function uploadSelectedFiles(projectId) {
-    const files = [...$('#mapUpload').files, ...$('#materialUpload').files];
+    const files = [...($('#mapUpload')?.files || []), ...($('#materialUpload')?.files || [])];
     if (!files.length) return [];
     const entries = [];
     for (const file of files) {
@@ -73,7 +74,7 @@
       saveProject();
       setStatus('已保存到此浏览器');
       if (!db || !signedInUser) {
-        const pendingFiles = $('#mapUpload').files.length + $('#materialUpload').files.length;
+        const pendingFiles = ($('#mapUpload')?.files.length || 0) + ($('#materialUpload')?.files.length || 0);
         toast(pendingFiles ? '项目文字已保存；文件需连接云端后上传' : '已保存到此浏览器；云端连接后可同步');
         return;
       }
@@ -92,8 +93,8 @@
         state.project.files = [...(state.project.files || []), ...added];
         const result = await db.from('projects').update({ payload: state.project }).eq('id', data.id).eq('owner_id', signedInUser.id);
         if (result.error) throw result.error;
-        $('#mapUpload').value = '';
-        $('#materialUpload').value = '';
+        if ($('#mapUpload')) $('#mapUpload').value = '';
+        if ($('#materialUpload')) $('#materialUpload').value = '';
       }
       saveProject();
       setStatus(`已同步云端 · ${savedTime(new Date())}`);
