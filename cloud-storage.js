@@ -124,6 +124,7 @@
   window.addEventListener('projectlibraryopen', refreshCloudProjects);
   window.addEventListener('projectlocalsaved', renderSavedProjects);
   renderSavedProjects(); updateAccount();
+  if (localStorage.getItem('yongjia_demo_project')) setStatus('此浏览器有已保存项目');
   if (db) {
     db.auth.getUser().then(({ data }) => { signedInUser = data?.user || null; updateAccount(); refreshCloudProjects(); });
     db.auth.onAuthStateChange((_event, session) => { signedInUser = session?.user || null; updateAccount(); setTimeout(refreshCloudProjects, 0); });
