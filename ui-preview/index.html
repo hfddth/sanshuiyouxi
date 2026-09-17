@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f4ec">
+  <meta name="description" content="山水有戏移动端界面样例">
+  <title>山水有戏 · 移动端界面样例</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="topbar">
+      <a class="wordmark" href="#home" aria-label="山水有戏首页"><span class="mark" aria-hidden="true"><svg viewBox="0 0 44 44"><path d="M5 34 17 11l7 14 7-11 8 20M7 37q15-5 30 0"/><circle cx="33" cy="7" r="3"/></svg></span><span>山水有戏<small>把旅程走成故事</small></span></a>
+      <span class="demo-tag">界面样例</span>
+    </header>
+
+    <main>
+      <section id="home" class="screen active" aria-labelledby="homeTitle">
+        <div class="home-art" aria-hidden="true"><span class="sun"></span><svg viewBox="0 0 390 290" preserveAspectRatio="xMidYMid slice"><path class="hill far" d="M-20 240Q63 89 134 235Q181 65 273 242Q331 126 412 240"/><path class="hill near" d="M-20 268Q88 161 150 267Q238 157 312 267Q365 206 420 264"/><path class="river" d="M141 305Q183 265 155 232Q142 213 202 206Q256 200 241 164Q230 145 270 126"/><path class="reed" d="M17 272q5-35 5-47m0 36q-9-17-16-18m20 25q7-24 14-32M331 266q9-36 8-47m2 41q9-16 19-20"/></svg><div class="art-caption">有一段故事，正等你走进去。</div></div>
+        <div class="home-copy"><p class="eyebrow">一城一故事 · 一步一发现</p><h1 id="homeTitle">今天，去哪里<br>遇见故事？</h1><p class="intro">从一处真实的风景出发，让路线、人物与线索慢慢展开。</p></div>
+        <div class="start-form"><label for="place">想去的地方</label><div class="input-shell"><span aria-hidden="true">⌖</span><input id="place" autocomplete="off" value="江心屿" placeholder="输入景区或城市"></div><p class="hint">当前仅提供“江心屿”界面演示；点位与剧情均为示例。</p><button class="primary" id="begin">开始探索 <span aria-hidden="true">↗</span></button></div>
+        <div class="home-footer"><span class="mini-line"></span><p>故事，始于你踏出的第一步。</p></div>
+      </section>
+
+      <section id="setup" class="screen" aria-labelledby="setupTitle" hidden>
+        <button class="back" data-back="home" aria-label="返回首页">← <span>返回</span></button><div class="setup-lead"><p class="eyebrow">故事即将开始</p><h1 id="setupTitle">想怎样走进<br>这座岛的故事？</h1><p>选择一种心情，旅程会从不同的视角展开。</p></div>
+        <div class="style-list" role="radiogroup" aria-label="故事风格">
+          <button class="style-card selected" role="radio" aria-checked="true" data-style="悬疑探索"><span class="style-glyph">◇</span><span><strong>悬疑探索</strong><small>沿着细节与线索，发现被忽略的角落。</small></span><span class="choice-dot"></span></button>
+          <button class="style-card" role="radio" aria-checked="false" data-style="轻松漫游"><span class="style-glyph">◌</span><span><strong>轻松漫游</strong><small>放慢脚步，让风景自己说话。</small></span><span class="choice-dot"></span></button>
+          <button class="style-card" role="radio" aria-checked="false" data-style="历史寻访"><span class="style-glyph">▤</span><span><strong>历史寻访</strong><small>从资料出发，辨认真实与传说。</small></span><span class="choice-dot"></span></button>
+        </div><div class="sticky-action"><button class="primary" id="enterStory">开始这段故事 <span aria-hidden="true">→</span></button></div>
+      </section>
+
+      <section id="story" class="screen" aria-labelledby="storyTitle" hidden>
+        <div class="story-head"><button class="back" data-back="setup" aria-label="返回风格选择">←</button><div><p class="eyebrow" id="scenicName">江心屿 · 示例旅程</p><h1 id="storyTitle">沿岸的来信</h1></div><button class="progress-pill" id="progressButton" aria-label="查看旅程进度">01 / 03</button></div>
+        <section class="map-card" aria-labelledby="mapTitle"><div class="map-heading"><div><span class="section-kicker">故事地图</span><h2 id="mapTitle">故事正在这里发生</h2></div><span class="map-compass" aria-hidden="true">N ↑</span></div><div class="map-visual"><svg viewBox="0 0 340 218" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path class="map-hill" d="M0 105q70-78 150 9 57-65 190-3M0 167q65-67 134-2 64-60 206 10"/><path class="map-water" d="M35 218q64-46 107-27t92-33q47-37 110-9"/><path class="map-path" d="M55 171Q105 126 153 151Q212 164 267 86"/></svg><button class="map-node current" data-node="0" style="left:14%;top:68%" aria-label="入口，当前节点">1</button><button class="map-node locked" data-node="1" style="left:43%;top:59%" aria-label="沿岸步道，未解锁" disabled>2</button><button class="map-node locked" data-node="2" style="left:77%;top:27%" aria-label="临水处，未解锁" disabled>3</button><span class="map-label label-one">入口</span><span class="map-label label-two">沿岸步道</span><span class="map-label label-three">临水处</span></div><div class="map-footer"><span><i></i> 当前故事节点</span><span id="mapStatus">轻触节点查看故事</span></div></section>
+        <div class="story-group"><section class="story-card" aria-labelledby="sceneTitle"><div class="story-meta"><span id="scenePlace">入口</span><span id="sceneCounter">第 01 站</span></div><h2 id="sceneTitle">风中的第一张纸条</h2><p id="sceneText">一张折起的纸条停在栏边。上面只有一句话：“顺着风，找到下一处标记。”</p><div class="guide-line"><button class="guide-face" id="guideTouch" aria-label="轻触小山灵"><span class="guide-eye left"></span><span class="guide-eye right"></span><span class="guide-smile"></span></button><p id="guideLine">轻触小山灵，它会回应你。</p></div></section>
+        <section class="task-card" aria-labelledby="taskTitle"><div class="task-heading"><span class="section-kicker">当前行动</span><span class="task-count" id="taskProgress">0 / 1</span></div><h2 id="taskTitle">找到纸条上的标记</h2><p id="taskText">先观察入口附近的提示，再决定沿哪条路前进。</p><div class="choice-list" id="choices"></div></section></div>
+        <p class="disclaimer">界面交互演示 · 剧情及点位未经现场核实</p>
+      </section>
+
+      <section id="journey" class="screen" aria-labelledby="journeyTitle" hidden><button class="back" data-back="story">← <span>返回故事</span></button><p class="eyebrow">我的旅程</p><h1 id="journeyTitle">走过的路，<br>已经写成了故事。</h1><div class="journey-art" aria-hidden="true"><svg viewBox="0 0 340 170"><path d="M36 133Q100 93 154 110T302 34"/><circle cx="36" cy="133" r="7"/><circle cx="154" cy="110" r="7"/><circle cx="302" cy="34" r="7"/></svg></div><div id="journeySummary" class="journey-summary"></div><button class="secondary" id="returnStory">继续探索</button></section>
+    </main>
+    <nav class="bottom-nav" aria-label="主要导航"><button data-nav="story" class="active"><span>◈</span>故事</button><button data-nav="map"><span>⌖</span>地图</button><button data-nav="journey"><span>◯</span>旅程</button></nav>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+</body>
+</html>
+
