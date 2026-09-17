@@ -17,3 +17,61 @@ body{background:#fffefa;font-size:15px}.paper-grain{display:none}button,input,se
 .save-state{grid-column:1/-1;margin:8px 0 0;color:#6f8176;font-size:12px;text-align:right}.project-actions{display:flex;flex-wrap:wrap;justify-content:flex-end}.project-actions button{white-space:nowrap}.saved-projects{margin-top:28px;border:1px solid #e5e5df;border-radius:18px;background:#fffefa;padding:22px}.saved-projects-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.saved-projects-head h2,.example-title{font:500 23px/1.4 var(--serif);margin:5px 0}.saved-projects-head small{font-size:11px;color:#788b7e}.saved-project-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:16px}.saved-project-list>p{font-size:13px;color:#79827b}.saved-project-card{display:grid;gap:6px;text-align:left;border:1px solid #e4e5de;background:#fff;border-radius:13px;padding:15px;cursor:pointer}.saved-project-card:hover{border-color:#769685}.saved-project-card b{font:500 18px var(--serif)}.saved-project-card span,.saved-project-card small{font-size:12px;color:#727a73}.example-title{margin:32px 0 0}.cloud-card #cloudLoginArea{display:grid;gap:12px}.cloud-card #cloudLoginArea[hidden],.cloud-card #cloudAccountArea[hidden]{display:none}.cloud-card #cloudAccountArea{display:flex;align-items:center;justify-content:space-between;gap:12px}.cloud-card #cloudAccountName{font-size:13px;overflow-wrap:anywhere}
 @media(max-width:760px){.project-actions{display:grid;grid-template-columns:1fr 1fr}.project-actions #quickSaveBtn{grid-column:1/-1;font-size:14px}.project-actions #shareBtn{grid-column:auto}.save-state{text-align:left}.saved-projects{padding:18px}.saved-projects-head h2{font-size:21px}}
 
+/* 简洁的景区副本流程：封面 → 输入 → 草案。 */
+#view-home .home-hero{min-height:calc(100dvh - 76px);padding-bottom:0;display:flex;align-items:center}
+#view-home .home-grid{width:100%;min-height:calc(100dvh - 76px)}
+#view-home .hero-actions{display:flex}
+#view-home .hero-actions .primary-btn{min-width:184px}
+#view-create{min-height:calc(100dvh - 76px);padding:42px 20px 100px;background:#fffefa}
+.create-page-head{width:min(900px,100%);margin:0 auto 22px;display:flex;align-items:center;justify-content:space-between;color:#879188;font-size:13px}
+.back-link{border:0;background:none;color:#4b6b5e;font-size:13px;padding:9px 0;cursor:pointer}
+#view-create .create-shell{max-width:900px}
+#view-create .create-card{padding:38px}
+#view-create .create-heading h2{font-size:36px}
+#view-create .create-heading p{font-size:15px}
+#view-create .form-grid{display:block;margin-top:30px}
+#view-create .field.wide{display:block;width:100%}
+#view-create .preference-row{display:block;margin-top:24px}
+#view-create .preference-row>span{display:block;margin-bottom:10px}
+#view-create .choice-chips{display:flex;flex-wrap:wrap;gap:8px}
+#view-create .choice-chips button{min-height:43px}
+.optional-files{margin-top:28px;border:1px solid #e4e6e0;border-radius:15px;padding:15px 18px;background:#fff}
+.optional-files summary{cursor:pointer;color:#4f6a5d;font-size:14px;font-weight:500}
+.optional-files .upload-grid{margin-top:16px}
+#view-create .create-footer{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+#view-create .create-actions{display:block;margin:0}
+#view-create .create-actions .primary-btn{min-width:190px}
+#view-studio .pipeline-sidebar,#view-studio .right-stack,#view-studio .agent-thinking{display:none!important}
+#view-studio .studio-shell{display:block}
+#view-studio .studio-main{max-width:900px;margin:auto}
+#view-studio .studio-grid{display:block}
+#view-studio .activity-stream{height:auto;max-height:260px}
+#view-project .deliverables-strip,#view-project .project-logic-card,#view-project .overview-main .metric:last-child{display:none}
+#view-project .project-tabs{gap:8px}
+#view-project .project-tabs button{font-size:13px}
+@media(max-width:760px){
+  #view-home .home-hero{min-height:calc(100dvh - 148px);padding-bottom:0}
+  #view-home .home-grid{min-height:calc(100dvh - 148px)}
+  #view-home .hero-copy{padding-top:105px}
+  #view-home .hero-actions{display:block;margin-top:22px}
+  #view-home .hero-actions .primary-btn{width:100%;max-width:320px}
+  #view-home .hero-visual{height:100%;min-height:500px}
+  #view-create{min-height:calc(100dvh - 148px);padding:20px 17px 100px}
+  #view-create .create-page-head{margin-bottom:14px}
+  #view-create .create-card{padding:25px 20px}
+  #view-create .create-heading h2{font-size:28px}
+  #view-create .create-heading p{font-size:13px}
+  #view-create .form-grid{margin-top:24px}
+  #view-create .create-footer{display:block}
+  #view-create .create-actions{margin-top:18px}
+  #view-create .create-actions .primary-btn{width:100%}
+  #view-studio .studio-main{padding:26px 17px 100px}
+  #view-project .project-tabs{gap:4px}
+  #view-project .project-tabs button{font-size:12px}
+}
+#view-create .create-card{max-width:650px;margin:auto}
+#view-create .create-actions{margin-top:30px;display:block}
+#view-create .create-actions .primary-btn{width:100%;min-height:54px}
+.completion-panel[hidden],.decision-panel[hidden]{display:none!important}
+#view-studio .activity-meta .tool-inline{display:none}
+
