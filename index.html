@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fffefa" />
   <meta name="description" content="山河入戏 · 文旅IP剧本游策划智能体" />
   <title>山水有戏 · 文旅剧本游策划</title>
-  <link rel="stylesheet" href="styles.css?v=ink-2" />
+  <link rel="stylesheet" href="styles.css?v=storage-1" />
 </head>
 <body>
   <div class="paper-grain" aria-hidden="true"></div>
@@ -211,7 +211,8 @@
             <p id="projectSubtitle">楠溪江 · 芙蓉古村 · 悬疑探索</p>
             <div class="project-tags" id="projectTagSummary"><span>7 个剧情节点</span><span>8 个任务</span><span>8 条线索</span><span>4 位角色</span></div>
           </div>
-          <div class="project-actions"><button class="ghost-btn" id="modifyBtn">继续修改</button><button class="ghost-btn" id="exportBtn">导出 JSON</button><button class="ghost-btn" id="printBtn">打印方案</button><button class="primary-btn compact" id="shareBtn">生成演示链接 <span>→</span></button></div>
+          <div class="project-actions"><button class="primary-btn compact" id="quickSaveBtn" title="快捷键 Ctrl+S / ⌘+S">保存项目</button><button class="ghost-btn" id="modifyBtn">继续修改</button><button class="ghost-btn" id="exportBtn">导出 JSON</button><button class="ghost-btn" id="printBtn">打印方案</button><button class="ghost-btn" id="shareBtn">分享说明</button></div>
+          <p class="save-state" id="saveState" role="status">尚未保存</p>
         </header>
 
         <nav class="project-tabs" id="projectTabs">
@@ -236,11 +237,10 @@
     <section class="view" id="view-library">
       <div class="library-shell">
         <header class="library-header"><div><small>PROJECT LIBRARY</small><h1>项目库</h1><p>保存每一个可持续修改的结构化文旅项目，而不是一段聊天记录。</p></div><button class="primary-btn" data-nav="home">＋ 新建项目</button></header>
-        <div class="library-stats"><article><small>项目总数</small><b>3</b></article><article><small>已完成</small><b>2</b></article><article><small>策划中</small><b>1</b></article><article><small>视觉资产</small><b>18</b></article></div>
+        <section class="saved-projects"><div class="saved-projects-head"><div><small>MY PROJECTS</small><h2>已保存的项目</h2></div><button class="ghost-btn compact" id="cloudBtn">云端账号</button></div><div id="savedProjectList" class="saved-project-list"><p>还没有保存的项目。</p></div></section>
+        <h2 class="example-title">演示案例</h2>
         <div class="project-library-grid">
           <article class="library-card featured" data-open-demo><div class="library-cover lc1"><span>七星照影</span></div><div class="library-copy"><span class="tiny-status done">已完成</span><h3>《七星照影》</h3><p>楠溪江 · 芙蓉古村 / 悬疑探索</p><div><span>7 节点</span><span>8 任务</span><span>92 分</span></div></div></article>
-          <article class="library-card"><div class="library-cover lc2"><span>山水秘约</span></div><div class="library-copy"><span class="tiny-status running">策划中</span><h3>《山水秘约》</h3><p>楠溪江 · 岩头古村 / 东方奇幻</p><div><span>4/11 阶段</span><span>43%</span></div></div></article>
-          <article class="library-card"><div class="library-cover lc3"><span>溪山旧信</span></div><div class="library-copy"><span class="tiny-status done">已完成</span><h3>《溪山旧信》</h3><p>永嘉书院 / 历史探索</p><div><span>6 节点</span><span>7 任务</span><span>89 分</span></div></div></article>
           <button class="new-project-card" data-nav="home"><span>＋</span><b>创建新的景区项目</b><small>输入景区名称，开始一次完整策划</small></button>
         </div>
       </div>
@@ -280,8 +280,21 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="cloudModal" hidden>
+    <section class="modal-card cloud-card">
+      <button class="modal-close" data-close-modal aria-label="关闭">×</button><small>PROJECT STORAGE</small><h2>项目储存</h2>
+      <p id="cloudStatusText">项目可先保存到此浏览器。连接云端后，登录即可在不同设备打开。</p>
+      <div id="cloudLoginArea"><label class="field"><span>登录邮箱</span><input id="cloudEmail" type="email" autocomplete="email" placeholder="name@example.com" /></label><button class="primary-btn" id="cloudLoginBtn">发送登录邮件</button></div>
+      <div id="cloudAccountArea" hidden><span id="cloudAccountName"></span><button class="ghost-btn compact" id="cloudLogoutBtn">退出登录</button></div>
+      <div class="setting-note"><b>保存方式</b><span>点击“保存项目”或按 Ctrl+S / ⌘+S。云端可用且已登录时同步到私有项目库；否则只保存在当前浏览器。</span></div>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js"></script>
+  <script src="cloud-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js?v=storage-1"></script>
+  <script src="cloud-storage.js"></script>
 </body>
 </html>
 
