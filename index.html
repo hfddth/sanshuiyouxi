@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fffefa" />
   <meta name="description" content="山河入戏 · 文旅IP剧本游策划智能体" />
   <title>山水有戏 · 文旅剧本游策划</title>
-  <link rel="stylesheet" href="styles.css?v=flow-2" />
+  <link rel="stylesheet" href="styles.css?v=flow-3" />
 </head>
 <body>
   <div class="paper-grain" aria-hidden="true"></div>
@@ -27,7 +27,6 @@
     </nav>
 
     <div class="header-actions">
-      <button class="mode-pill" id="modeBtn"><span class="status-dot"></span><span id="modeText">演示模式</span></button>
       <button class="round-btn" id="settingsBtn" aria-label="开发设置">⚙</button>
     </div>
   </header>
@@ -37,7 +36,6 @@
       <span class="brand-symbol mini"><svg viewBox="0 0 54 54"><path d="M5 38c8-3 13-14 19-25 5 8 7 12 10 17 4-5 7-10 10-15 4 7 6 14 7 23"/><path d="M7 42c13-4 26-5 40-1"/><circle cx="38" cy="11" r="4"/></svg></span>
       <span><b>山水有戏</b><small>景区故事策划</small></span>
     </button>
-    <button class="mode-pill small" id="mobileModeBtn"><span class="status-dot"></span><span>Demo</span></button>
   </header>
 
   <main id="app">
@@ -104,7 +102,7 @@
 
         <div class="studio-main">
           <header class="studio-header">
-            <div><small>STORY DRAFT</small><h1>正在整理你的景区副本草案</h1><p id="studioSubtitle">演示版将展示副本策划流程；真实 AI 生成需连接后端。</p></div>
+            <div><small>STORY DRAFT</small><h1>正在整理你的景区副本草案</h1><p id="studioSubtitle">正在生成故事、游线和任务结构；连接 AI 后端后可启用真实生成。</p></div>
             <div class="studio-head-actions"><span class="runtime-pill"><span class="live-dot"></span><b id="agentStatus">运行中</b></span><button class="ghost-btn compact" id="cancelRunBtn">暂停</button></div>
           </header>
 
@@ -129,7 +127,7 @@
           </div>
 
           <section class="completion-panel" id="completionPanel" hidden>
-            <span class="completion-icon">✓</span><div><small>DRAFT READY</small><h2>副本草案已准备好</h2><p>已整理故事、游线和任务的演示草案。打开后可查看并保存。</p></div><button class="primary-btn" id="openProjectBtn">查看副本草案 <span>→</span></button>
+            <span class="completion-icon">✓</span><div><small>DRAFT READY</small><h2>副本草案已准备好</h2><p>已整理故事、游线和任务草案。打开后可查看并保存。</p></div><button class="primary-btn" id="openProjectBtn">查看副本草案 <span>→</span></button>
           </section>
         </div>
       </div>
@@ -179,11 +177,11 @@
 
   <div class="modal-backdrop" id="settingsModal" hidden>
     <section class="modal-card">
-      <button class="modal-close" data-close-modal>×</button><small>DEVELOPER SETTINGS</small><h2>后端接入设置</h2><p>前端默认使用完整演示数据。后续接入 Railway / Node.js 后，将 API 地址填在这里即可切换真实模式。</p>
+      <button class="modal-close" data-close-modal>×</button><small>DEVELOPER SETTINGS</small><h2>后端接入设置</h2><p>未连接后端时使用本地草案数据。接入 Railway / Node.js 后，将 API 地址填在这里即可启用真实生成。</p>
       <label class="field"><span>API Base URL</span><input id="apiBaseInput" placeholder="https://your-api.up.railway.app"/></label>
       <div class="api-test-row"><button class="ghost-btn compact" id="testApiBtn">测试连接</button><span id="apiTestResult">尚未测试</span></div>
       <div class="setting-note"><b>安全提示</b><span>大模型与图片 API Key 只能放在后端环境变量中，不要写入 HTML / JS 或提交到 GitHub。</span></div>
-      <div class="modal-actions"><button class="ghost-btn" id="clearApiBtn">恢复演示模式</button><button class="primary-btn" id="saveApiBtn">保存设置</button></div>
+      <div class="modal-actions"><button class="ghost-btn" id="clearApiBtn">清除 API 配置</button><button class="primary-btn" id="saveApiBtn">保存设置</button></div>
     </section>
   </div>
 
@@ -192,7 +190,7 @@
       <button class="modal-close" data-close-modal>×</button><small>VISUAL ASSET TASK</small><h2 id="assetModalTitle">视觉资产</h2><p id="assetModalDesc">查看生图任务与提示词。</p>
       <div class="asset-prompt-box"><span>Prompt</span><p id="assetPromptText"></p></div>
       <div class="asset-provider-row"><span>推荐模型</span><b>Seedream / GPT Image / 兼容生图 API</b></div>
-      <div class="modal-actions"><button class="ghost-btn" data-close-modal>关闭</button><button class="primary-btn" id="assetModalGenerate">生成演示预览 <span>→</span></button></div>
+      <div class="modal-actions"><button class="ghost-btn" data-close-modal>关闭</button><button class="primary-btn" id="assetModalGenerate">生成草案预览 <span>→</span></button></div>
     </section>
   </div>
 
@@ -209,7 +207,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="cloud-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=flow-2"></script>
+  <script src="app.js?v=flow-3"></script>
   <script src="cloud-storage.js?v=flow-2"></script>
 </body>
 </html>
