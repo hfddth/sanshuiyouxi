@@ -16,6 +16,8 @@ https://hfddth.github.io/sanshuiyouxi/
 - 健康检查：`cloud-functions/health/index.py` → `GET /health`
 - 会话请求通过 `Makers-Conversation-Id` 保持同一 Agent 实例
 - 知识库直接从 `agent/data/nanxijiang` 的授权 Markdown 文件读取
+- 首页提供“一键启动 Agent”入口；同站部署时自动连接 `/chat`
+- 临时跨站 Agent 地址只需在 `agent-config.js` 中替换
 
 推送到已关联的 GitHub `main` 分支后，EdgeOne Makers 会自动构建并部署。
 

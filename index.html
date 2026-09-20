@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f8f6ef" />
   <meta name="description" content="山水有戏 · 对话式文旅剧本创作智能体" />
   <title>山水有戏 · 对话式文旅剧本创作</title>
-  <link rel="stylesheet" href="styles.css?v=dialogue-1" />
+  <link rel="stylesheet" href="styles.css?v=dialogue-2" />
 </head>
 <body>
   <header class="topbar">
@@ -17,6 +17,7 @@
     <button class="back-project" id="backProjectBtn" hidden>← 返回创作</button>
     <div class="top-actions">
       <span class="schema-badge">固定 JSON 模板</span>
+      <button class="agent-launch compact" id="agentQuickStart" type="button"><i></i><span>启动 Agent</span></button>
       <button class="icon-btn" id="settingsBtn" aria-label="后端设置">⚙</button>
     </div>
   </header>
@@ -29,7 +30,11 @@
           <div class="eyebrow"><span></span>山水为境 · 对话成篇</div>
           <h1>把景区的故事，<br>一步步聊出来。</h1>
           <p>通过几轮自然对话梳理景区、空间与文化，自动生成可直接用于产品页面的标准剧本 JSON。</p>
-          <button class="primary-btn hero-btn" id="startCreateBtn">开始对话创作 <span>→</span></button>
+          <div class="hero-actions">
+            <button class="primary-btn hero-btn" id="startCreateBtn">开始对话创作 <span>→</span></button>
+            <button class="agent-launch hero-agent-btn" id="startAgentBtn" type="button"><i></i><span>一键启动 Agent</span></button>
+          </div>
+          <p class="agent-launch-note" id="agentLaunchNote">点击后自动连接智能体，并直接进入剧本创作。</p>
         </div>
       </div>
     </section>
@@ -125,7 +130,8 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=dialogue-3"></script>
+  <script src="agent-config.js?v=1"></script>
+  <script src="app.js?v=dialogue-4"></script>
 </body>
 </html>
 

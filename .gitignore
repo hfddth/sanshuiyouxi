@@ -1,6 +1,12 @@
 .env
 .edgeone/
+.npm-cache/
 dist/
 outputs/
 __pycache__/
 *.pyc
+
+# Tencent Cloud EdgeOne
+.env
+.edgeone/*
+.tef_dist/*
