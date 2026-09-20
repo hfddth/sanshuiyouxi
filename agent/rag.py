@@ -1,116 +1,82 @@
+"""轻量知识库检索。
+
+直接读取仓库内的 Markdown 资料并按关键词排序，避免在无服务器运行时下载
+大型向量模型。19 份授权资料会随部署包一起发布。
 """
-RAG 检索模块：加载 .md 知识库 → 切分 → 向量化 → 存入 Chroma → 提供检索接口。
-策略：优先使用本地缓存的嵌入模型，本地没有时再联网下载（走国内镜像）。
-"""
-import os
+import re
+from functools import lru_cache
+from pathlib import Path
 
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
-
-from config import KNOWLEDGE_DIR, CHROMA_PERSIST_DIR, EMBEDDING_MODEL
+from config import KNOWLEDGE_DIR
 
 
-# ===== 全局单例 =====
-_EMBEDDINGS = None
+def _chunks(text: str, size: int = 1800) -> list[str]:
+    sections = [part.strip() for part in re.split(r"\n(?=#{1,4}\s)|\n{2,}", text) if part.strip()]
+    result: list[str] = []
+    for section in sections:
+        if len(section) <= size:
+            result.append(section)
+        else:
+            result.extend(section[i:i + size] for i in range(0, len(section), size))
+    return result
 
 
-def get_embeddings():
-    """全局单例。先尝试只用本地缓存，本地没有时再联网下载（走镜像）。"""
-    global _EMBEDDINGS
-    if _EMBEDDINGS is not None:
-        return _EMBEDDINGS
-
-    try:
-        _EMBEDDINGS = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"local_files_only": True},
-        )
-        print("✅ 使用本地缓存的嵌入模型")
-        return _EMBEDDINGS
-    except Exception as e:
-        print(f"⚠️ 本地没有找到模型，准备联网下载：{e}")
-
-    os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-    _EMBEDDINGS = HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-    )
-    print("✅ 已联网下载并加载嵌入模型")
-    return _EMBEDDINGS
+@lru_cache(maxsize=1)
+def _load_documents() -> list[dict]:
+    root = Path(KNOWLEDGE_DIR)
+    documents: list[dict] = []
+    if not root.exists():
+        return documents
+    for path in sorted(root.rglob("*.md")):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        rel = path.relative_to(root)
+        source_dir = rel.parts[0] if len(rel.parts) > 1 else ""
+        for chunk in _chunks(text):
+            documents.append({
+                "text": chunk,
+                "source_dir": source_dir,
+                "title": path.stem,
+            })
+    return documents
 
 
-def build_vectorstore():
-    """
-    构建向量库。加载所有 .md 文件，为每个文本块打上来源文件夹标签。
-    """
-    if not os.path.exists(KNOWLEDGE_DIR):
-        raise FileNotFoundError(
-            f"知识库目录不存在：{KNOWLEDGE_DIR}，请先创建并放入 .md 文件"
-        )
-
-    loader = DirectoryLoader(
-        KNOWLEDGE_DIR,
-        glob="**/*.md",
-        loader_cls=TextLoader,
-        loader_kwargs={"encoding": "utf-8"},
-    )
-    docs = loader.load()
-    if not docs:
-        raise ValueError(f"在 {KNOWLEDGE_DIR} 中没有找到任何 .md 文件")
-
-    # 为每个文档打上来源文件夹标签
-    for doc in docs:
-        source = doc.metadata.get("source", "")
-        rel = os.path.relpath(source, KNOWLEDGE_DIR)
-        parts = rel.split(os.sep)
-        # parts[0] 是顶层子目录名，如 "01_古村落空间"
-        doc.metadata["source_dir"] = parts[0] if len(parts) >= 2 else ""
-
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=80,
-        separators=["##", "\n\n", "\n", "。", "；"],
-    )
-    chunks = splitter.split_documents(docs)
-
-    embeddings = get_embeddings()
-    # 删除旧库，避免重复数据
-    import shutil
-    if os.path.exists(CHROMA_PERSIST_DIR):
-        shutil.rmtree(CHROMA_PERSIST_DIR)
-    Chroma.from_documents(
-        chunks,
-        embeddings,
-        persist_directory=CHROMA_PERSIST_DIR,
-    )
-    print(f"向量库构建完成，共 {len(chunks)} 个文本块，已保存到 {CHROMA_PERSIST_DIR}")
-
-
-def get_retriever():
-    """返回 retriever（无过滤，供简单检索用）。"""
-    vectorstore = Chroma(
-        persist_directory=CHROMA_PERSIST_DIR,
-        embedding_function=get_embeddings(),
-    )
-    return vectorstore.as_retriever(search_kwargs={"k": 5})
+def _terms(query: str) -> list[str]:
+    words = re.findall(r"[A-Za-z0-9_-]+|[\u4e00-\u9fff]{2,}", query.lower())
+    terms: list[str] = []
+    for word in words:
+        terms.append(word)
+        if len(word) > 4 and re.fullmatch(r"[\u4e00-\u9fff]+", word):
+            terms.extend(word[i:i + 2] for i in range(len(word) - 1))
+    return list(dict.fromkeys(terms))
 
 
 def retrieve(query: str, k: int = 5, source_dir: str = None) -> list[str]:
-    """
-    检索接口。可按 source_dir 过滤（如 "01_古村落空间"）。
-    """
-    vectorstore = Chroma(
-        persist_directory=CHROMA_PERSIST_DIR,
-        embedding_function=get_embeddings(),
-    )
-    if source_dir:
-        results = vectorstore.similarity_search(
-            query, k=k, filter={"source_dir": source_dir}
-        )
-    else:
-        results = vectorstore.similarity_search(query, k=k)
-    return [doc.page_content for doc in results]
+    terms = _terms(query)
+    scored: list[tuple[int, str]] = []
+    for doc in _load_documents():
+        if source_dir and doc["source_dir"] != source_dir:
+            continue
+        haystack = f'{doc["title"]}\n{doc["text"]}'.lower()
+        score = sum((8 if term in doc["title"].lower() else 1) * haystack.count(term) for term in terms)
+        scored.append((score, f'【来源：{doc["title"]}】\n{doc["text"]}'))
+    scored.sort(key=lambda item: item[0], reverse=True)
+    matches = [text for score, text in scored if score > 0][:k]
+    if matches:
+        return matches
+    return [text for _, text in scored[:k]]
+
+
+def build_vectorstore():
+    """兼容旧启动脚本：预热 Markdown 缓存即可。"""
+    docs = _load_documents()
+    print(f"知识库加载完成，共 {len(docs)} 个文本片段")
+
+
+def get_retriever():
+    class Retriever:
+        def invoke(self, query: str):
+            return retrieve(query)
+    return Retriever()
 
 
 def retrieve_multi_dimension(spot: str, script_type: str) -> str:
@@ -147,11 +113,7 @@ def list_available_spots() -> list[str]:
     """
     扫描 01_古村落空间 子目录，返回所有可用的景区名称（.md 文件名去掉后缀）。
     """
-    spots_dir = os.path.join(KNOWLEDGE_DIR, "01_古村落空间")
-    if not os.path.exists(spots_dir):
+    spots_dir = Path(KNOWLEDGE_DIR) / "01_古村落空间"
+    if not spots_dir.exists():
         return []
-    spots = []
-    for fname in os.listdir(spots_dir):
-        if fname.endswith(".md"):
-            spots.append(fname[:-3])
-    return spots
+    return sorted(path.stem for path in spots_dir.glob("*.md"))

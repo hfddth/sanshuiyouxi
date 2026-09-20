@@ -6,7 +6,8 @@ const questions=[
   {key:'style',title:'选择体验方式',text:'最后，希望它是什么风格？也可以补充适合的人群、时长和互动方式。',hint:'例如：轻悬疑，亲子家庭，90分钟，以实景解谜和NPC对话为主',quick:['轻悬疑 · 实景解谜','亲子探索 · 互动任务','东方奇幻 · NPC对话']}
 ];
 const launchAgent=new URLSearchParams(location.search).get('agent');
-const initialApiBase=(launchAgent||localStorage.getItem('sanshui_agent_api')||'').trim().replace(/\/$/,'');
+const makersSameOrigin=!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&!location.hostname.endsWith('github.io')?location.origin:'';
+const initialApiBase=(launchAgent||localStorage.getItem('sanshui_agent_api')||makersSameOrigin).trim().replace(/\/$/,'');
 if(launchAgent){localStorage.setItem('sanshui_agent_api',initialApiBase);history.replaceState({},'',location.pathname)}
 const state={step:0,answers:{},messages:[],script:null,activeNode:0,panel:'chat',sample:null,apiBase:initialApiBase,sessionId:`web_${Date.now()}`,apiReady:false};
 const icons={project:'卷',spaces:'山',plot_nodes:'线',npcs:'人'};
@@ -31,7 +32,7 @@ $('#structureList').innerHTML=data.map(([k,n,v],i)=>`<div class="structure-item 
 
 function resetConversation(){state.step=0;state.answers={};state.messages=[];state.script=null;state.activeNode=0;state.apiReady=false;$('#sideProjectName').textContent='新剧本';$('#sideProjectMeta').textContent=state.apiBase?'Agent 已连接':'等待对话';renderQuick([]);renderProgress();renderStructure();showPanel('chat');if(state.apiBase)initRemoteAgent();else askCurrent()}
 async function initRemoteAgent(){showTyping();try{const data=await callAgent('');$('#typing')?.remove();state.apiReady=true;addMessage('assistant',data.reply||'请告诉我你想创作剧本的景区。','真实 Agent');}catch(e){$('#typing')?.remove();state.apiReady=false;addMessage('assistant','Agent 暂时无法连接，已切换到本地对话创作。','本地模式');state.apiBase='';localStorage.removeItem('sanshui_agent_api');askCurrent()}}
-async function callAgent(message){const res=await fetch(`${state.apiBase.replace(/\/$/,'')}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:state.sessionId,message})});if(!res.ok)throw new Error('Agent response failed');return res.json()}
+async function callAgent(message){const res=await fetch(`${state.apiBase.replace(/\/$/,'')}/chat`,{method:'POST',headers:{'Content-Type':'application/json','Makers-Conversation-Id':state.sessionId},body:JSON.stringify({session_id:state.sessionId,message})});if(!res.ok)throw new Error(`Agent response failed: ${res.status}`);return res.json()}
 async function submitChat(){const input=$('#chatInput'),text=input.value.trim();if(!text)return;input.value='';addMessage('user',text);renderQuick([]);if(state.apiBase&&state.apiReady){showTyping();try{const data=await callAgent(text);$('#typing')?.remove();addMessage('assistant',data.reply||'已收到。','真实 Agent');if(data.script&&data.script.project&&data.script.plot_nodes?.length){state.script=normalizeScript(data.script);finishScript()}}catch(e){$('#typing')?.remove();addMessage('assistant','本次连接失败，请检查 Agent 服务地址。');toast('Agent 连接失败')}return}
 const q=questions[state.step];state.answers[q.key]=text;state.step++;renderProgress();renderStructure();if(state.step<questions.length){showTyping();setTimeout(()=>{$('#typing')?.remove();askCurrent()},380);return}showTyping();setTimeout(()=>{$('#typing')?.remove();state.script=buildScript(state.answers);finishScript();addMessage('assistant',`《${state.script.project.name}》已经生成。\n我已把对话内容拆分成 ${state.script.spaces.length} 个真实空间、${state.script.plot_nodes.length} 个剧情节点和 ${state.script.npcs.length} 位 NPC，并完成字段与 ID 校验。`,'可继续查看拆分结果或下载 JSON');renderQuick(['查看剧本拆分','查看标准 JSON'],true)},650)}
 

@@ -1,0 +1,6 @@
+.env
+.edgeone/
+dist/
+outputs/
+__pycache__/
+*.pyc

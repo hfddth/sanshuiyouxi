@@ -6,7 +6,18 @@
 
 https://hfddth.github.io/sanshuiyouxi/
 
-当前上线的是前端演示版本；AI 生成等功能需要单独接入后端服务。
+腾讯云 EdgeOne Makers 部署版本会在同一站点提供网页与 `/chat` Agent 接口，
+并使用 Makers 内置的 DeepSeek 兼容模型网关。
+
+## 腾讯云部署
+
+- 静态网页构建到 `dist/`
+- Agent 入口：`agents/chat/index.py` → `POST /chat`
+- 健康检查：`cloud-functions/health/index.py` → `GET /health`
+- 会话请求通过 `Makers-Conversation-Id` 保持同一 Agent 实例
+- 知识库直接从 `agent/data/nanxijiang` 的授权 Markdown 文件读取
+
+推送到已关联的 GitHub `main` 分支后，EdgeOne Makers 会自动构建并部署。
 
 ## 当前版本 V2
 
