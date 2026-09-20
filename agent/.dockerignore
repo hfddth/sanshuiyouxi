@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.venv
+logs
+outputs
+__pycache__
+*.pyc
+tests
+chroma_db
