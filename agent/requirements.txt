@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+python-dotenv
+requests
+langgraph
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-ollama
+langchain-community
+langchain-text-splitters
+langchain-chroma
+langchain-huggingface
+sentence-transformers
+chromadb
