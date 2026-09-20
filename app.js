@@ -5,7 +5,10 @@ const questions=[
   {key:'culture',title:'找到文化核心',text:'你最希望游客记住哪段当地文化、历史人物或民间故事？',hint:'例如：谢灵运山水诗、耕读文化、地方传说',quick:['谢灵运山水诗','耕读文化与古村建筑','山水生态与地方传说']},
   {key:'style',title:'选择体验方式',text:'最后，希望它是什么风格？也可以补充适合的人群、时长和互动方式。',hint:'例如：轻悬疑，亲子家庭，90分钟，以实景解谜和NPC对话为主',quick:['轻悬疑 · 实景解谜','亲子探索 · 互动任务','东方奇幻 · NPC对话']}
 ];
-const state={step:0,answers:{},messages:[],script:null,activeNode:0,panel:'chat',sample:null,apiBase:localStorage.getItem('sanshui_agent_api')||'',sessionId:`web_${Date.now()}`,apiReady:false};
+const launchAgent=new URLSearchParams(location.search).get('agent');
+const initialApiBase=(launchAgent||localStorage.getItem('sanshui_agent_api')||'').trim().replace(/\/$/,'');
+if(launchAgent){localStorage.setItem('sanshui_agent_api',initialApiBase);history.replaceState({},'',location.pathname)}
+const state={step:0,answers:{},messages:[],script:null,activeNode:0,panel:'chat',sample:null,apiBase:initialApiBase,sessionId:`web_${Date.now()}`,apiReady:false};
 const icons={project:'卷',spaces:'山',plot_nodes:'线',npcs:'人'};
 
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
