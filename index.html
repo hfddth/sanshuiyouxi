@@ -16,7 +16,6 @@
     </button>
     <button class="back-project" id="backProjectBtn" hidden>← 返回创作</button>
     <div class="top-actions">
-      <span class="schema-badge">固定 JSON 模板</span>
       <button class="agent-launch compact" id="agentQuickStart" type="button"><i></i><span>启动 Agent</span></button>
       <button class="icon-btn" id="settingsBtn" aria-label="后端设置">⚙</button>
     </div>
@@ -29,7 +28,7 @@
         <div class="home-copy">
           <div class="eyebrow"><span></span>山水为境 · 对话成篇</div>
           <h1>把景区的故事，<br>一步步聊出来。</h1>
-          <p>通过几轮自然对话梳理景区、空间与文化，自动生成可直接用于产品页面的标准剧本 JSON。</p>
+          <p>通过几轮自然对话梳理景区、空间与文化，自动生成可直接查看和使用的景区剧本方案。</p>
           <div class="hero-actions">
             <button class="primary-btn hero-btn" id="startCreateBtn">开始对话创作 <span>→</span></button>
             <button class="agent-launch hero-agent-btn" id="startAgentBtn" type="button"><i></i><span>一键启动 Agent</span></button>
@@ -46,7 +45,6 @@
           <button class="active" data-panel="chat"><i>✦</i><span>创作对话</span><em>→</em></button>
           <button data-panel="script"><i>▤</i><span>剧本内容</span><em>→</em></button>
           <button data-panel="npcs"><i>♙</i><span>人物角色</span><em>→</em></button>
-          <button data-panel="json"><i>{ }</i><span>JSON 数据</span><em>→</em></button>
           <button data-panel="library"><i>□</i><span>我的项目</span><em>→</em></button>
         </nav>
         <div class="side-ink" aria-hidden="true"></div>
@@ -71,7 +69,7 @@
             <aside class="structure-card">
               <div class="structure-head"><div><small>LIVE STRUCTURE</small><h3>剧本结构</h3></div><span id="structureState">梳理中</span></div>
               <div class="structure-list" id="structureList"></div>
-              <div class="schema-note"><b>标准输出</b><p>project + spaces + plot_nodes + npcs</p><span>前端直接读取字段，不再二次理解剧情。</span></div>
+              <div class="schema-note"><b>自动整理</b><p>空间、剧情、任务与角色会同步生成</p><span>完成后可直接进入剧本内容查看。</span></div>
             </aside>
           </div>
         </section>
@@ -92,15 +90,6 @@
           <div class="npc-grid" id="npcGrid"></div>
         </section>
 
-        <section class="panel-view" id="panel-json">
-          <header class="workspace-head compact-head">
-            <div><small>STRUCTURED SCRIPT</small><h2>标准剧本 JSON</h2><p>固定字段、唯一 ID、明确关系，可直接交给前端渲染。</p></div>
-            <div class="head-actions"><button class="ghost-btn" id="copyJsonBtn">复制 JSON</button><button class="primary-btn" id="downloadJsonBtn">下载 JSON</button></div>
-          </header>
-          <div class="validation-bar" id="validationBar"></div>
-          <pre class="json-view" id="jsonView"></pre>
-        </section>
-
         <section class="panel-view" id="panel-library">
           <header class="workspace-head compact-head">
             <div><small>PROJECT LIBRARY</small><h2>我的项目</h2><p>继续编辑已经保存的剧本，并按标准模板管理结构化内容。</p></div>
@@ -116,7 +105,6 @@
     <button class="active" data-panel="chat"><i>✦</i><small>对话</small></button>
     <button data-panel="script"><i>▤</i><small>剧本</small></button>
     <button data-panel="npcs"><i>♙</i><small>角色</small></button>
-    <button data-panel="json"><i>{ }</i><small>JSON</small></button>
   </nav>
 
   <div class="modal" id="settingsModal" hidden>
@@ -131,7 +119,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="agent-config.js?v=1"></script>
-  <script src="app.js?v=dialogue-4"></script>
+  <script src="app.js?v=dialogue-5"></script>
 </body>
 </html>
 

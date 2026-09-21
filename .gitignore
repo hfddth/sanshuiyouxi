@@ -10,3 +10,4 @@ __pycache__/
 .env
 .edgeone/*
 .tef_dist/*
+agents/chat/core/

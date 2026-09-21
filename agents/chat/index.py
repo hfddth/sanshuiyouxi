@@ -12,8 +12,7 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
-CORE_DIR = ROOT_DIR / "agent"
+CORE_DIR = Path(__file__).resolve().parent / "core"
 if str(CORE_DIR) not in sys.path:
     sys.path.insert(0, str(CORE_DIR))
 
