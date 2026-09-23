@@ -34,8 +34,9 @@ jobs:
       - name: Compile Python
         run: python -m compileall -q agent
       - name: Run Agent tests
-        working-directory: agent
-        run: pytest -q
+        env:
+          PYTHONPATH: agent
+        run: pytest -q agent/tests
       - name: Check browser JavaScript
         run: node --check app.js
       - name: Build Railway image
