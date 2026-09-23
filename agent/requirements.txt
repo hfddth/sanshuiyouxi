@@ -1,7 +1,6 @@
-fastapi
-uvicorn[standard]
-pydantic>=2
-python-dotenv
-langgraph
-langchain-core
-langchain-openai
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+pydantic>=2.8,<3
+python-dotenv>=1,<2
+langchain-core>=0.3,<2
+langchain-openai>=0.3,<2

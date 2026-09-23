@@ -2,14 +2,12 @@
 Main Agent：自主规划 + 确认修改 + 对话式游玩。
 用户只提供景区，Agent 自主完成完整剧本游策划。
 """
-import os
+import logging
 import random
 import re
-from datetime import datetime
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from pydantic import BaseModel
-from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from schema import Script, Review
@@ -18,7 +16,7 @@ from prompts import (
     PLAY_JUDGE_PROMPT,
     CONFIRM_SUMMARY_PROMPT,
 )
-from llm import get_llm, get_json_llm, get_text_llm
+from llm import get_json_llm, get_text_llm
 from rag import list_available_spots
 from skills import (
     Skill01_CultureAnalysis,
@@ -29,7 +27,7 @@ from skills import (
 )
 
 
-SESSIONS: dict[str, dict] = {}
+logger = logging.getLogger(__name__)
 
 
 class AgentState(TypedDict):
@@ -39,7 +37,12 @@ class AgentState(TypedDict):
     stage: str
     reply: str
     current_node_id: str
-    node_history: list
+    node_history: list[str]
+    messages: list[dict[str, str]]
+    spot_options: list[str]
+
+
+SESSIONS: dict[str, AgentState] = {}
 
 
 class PlayJudge(BaseModel):
@@ -59,25 +62,6 @@ def make_greeting() -> tuple[str, list[str]]:
     lines.append("")
     lines.append("回复序号或直接输入景区名都可以。")
     return "\n".join(lines), options
-
-
-def save_script_to_file(session_id: str, script: Script, suffix: str = ""):
-    """把完整剧本保存到本地 outputs 目录。"""
-    os.makedirs("outputs", exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    if suffix:
-        safe_session_id = re.sub(r"[^a-zA-Z0-9_-]", "_", session_id)[:80] or "session"
-        name = f"outputs/{safe_session_id}_{suffix}_{timestamp}.json"
-    else:
-        safe_session_id = re.sub(r"[^a-zA-Z0-9_-]", "_", session_id)[:80] or "session"
-        name = f"outputs/{safe_session_id}_{timestamp}.json"
-
-    try:
-        with open(name, "w", encoding="utf-8") as f:
-            f.write(script.model_dump_json(indent=2))
-        print(f"✅ 剧本已保存到 {name}")
-    except Exception as e:
-        print(f"⚠️ 保存剧本失败：{e}")
 
 
 def plan_and_generate_node(state: AgentState) -> dict:
@@ -172,9 +156,6 @@ def confirm_node(state: AgentState) -> dict:
     script: Script = state["script"]
     summary = make_confirm_summary(script)
 
-    # 保存完整剧本到本地
-    save_script_to_file(state["session_id"], script, suffix="initial")
-
     # 硬拼确认提示，不依赖 LLM
     hint = (
         "\n\n---\n"
@@ -232,9 +213,6 @@ def modify_node(state: AgentState) -> dict:
     summary = make_confirm_summary(script)
     summary = f"【已根据你的要求修改】\n\n{summary}"
 
-    # 保存修改后的完整剧本到本地
-    save_script_to_file(state["session_id"], script, suffix="modified")
-
     # 末尾同样拼确认提示
     hint = (
         "\n\n---\n"
@@ -273,26 +251,11 @@ def start_play_node(state: AgentState) -> dict:
     }
 
 
-_GRAPH = None
-
-
-def build_graph():
-    global _GRAPH
-    if _GRAPH is not None:
-        return _GRAPH
-
-    graph = StateGraph(AgentState)
-    graph.add_node("plan_and_generate", plan_and_generate_node)
-    graph.add_node("confirm", confirm_node)
-    graph.add_node("start_play", start_play_node)
-
-    graph.set_entry_point("plan_and_generate")
-    graph.add_edge("plan_and_generate", "confirm")
-    graph.add_edge("confirm", END)
-    graph.add_edge("start_play", END)
-
-    _GRAPH = graph.compile()
-    return _GRAPH
+def generate_script(state: AgentState) -> AgentState:
+    """按固定顺序完成策划与确认，避免为线性流程引入额外运行时。"""
+    state.update(plan_and_generate_node(state))
+    state.update(confirm_node(state))
+    return state
 
 
 def find_node(script: Script, node_id: str):
@@ -450,10 +413,11 @@ def chat(session_id: str, user_message: str) -> dict:
         state["messages"].append({"role": "user", "content": user_message})
 
         state["stage"] = "generating"
-        graph = build_graph()
         try:
-            result = graph.invoke(state)
+            result = generate_script(state)
         except Exception:
+            safe_session_id = re.sub(r"[^a-zA-Z0-9_-]", "_", session_id)[:32]
+            logger.exception("Agent 生成失败，session=%s", safe_session_id)
             state["stage"] = "ask_user"
             SESSIONS[session_id] = state
             return {

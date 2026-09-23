@@ -1,16 +1,11 @@
-"""
-全局配置。从 .env 读取，集中管理 LLM、RAG、路径等参数。
-"""
+"""Railway 运行配置。密钥只从环境变量读取。"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# TODO: 让 Claude 补全所有配置项的读取，并做默认值和类型转换
 BASE_DIR = Path(__file__).resolve().parent
-
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "deepseek")
 
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
 DEEPSEEK_BASE_URL = (
@@ -23,13 +18,6 @@ DEEPSEEK_MODEL = (
     or os.getenv("AI_GATEWAY_MODEL")
     or "deepseek-chat"
 )
-
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
-
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
-
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
-CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", str(BASE_DIR / "chroma_db"))
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "120"))
+LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "2"))
 KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", str(BASE_DIR / "data" / "nanxijiang"))

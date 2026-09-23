@@ -50,7 +50,7 @@ def _terms(query: str) -> list[str]:
     return list(dict.fromkeys(terms))
 
 
-def retrieve(query: str, k: int = 5, source_dir: str = None) -> list[str]:
+def retrieve(query: str, k: int = 5, source_dir: str | None = None) -> list[str]:
     terms = _terms(query)
     scored: list[tuple[int, str]] = []
     for doc in _load_documents():

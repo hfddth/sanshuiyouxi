@@ -7,7 +7,7 @@
 - Skill05：修改影响分析
 """
 import json
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from schema import (
@@ -20,36 +20,36 @@ from rag import retrieve_multi_dimension
 
 
 class CultureResourceList(BaseModel):
-    culture_resources: list[CultureResource] = []
+    culture_resources: list[CultureResource] = Field(default_factory=list)
 
 
 class IPBundle(BaseModel):
     ip: IPInfo
     world: WorldInfo
-    characters: list[Character] = []
+    characters: list[Character] = Field(default_factory=list)
     story: StoryInfo
 
 
 class SpaceList(BaseModel):
-    spaces: list[Space] = []
+    spaces: list[Space] = Field(default_factory=list)
 
 
 class PlotNodeList(BaseModel):
-    plot_nodes: list[PlotNode] = []
+    plot_nodes: list[PlotNode] = Field(default_factory=list)
 
 
 class NPCList(BaseModel):
-    npcs: list[NPC] = []
+    npcs: list[NPC] = Field(default_factory=list)
 
 
 class ReviewResult(BaseModel):
-    issues: list[ReviewIssue] = []
+    issues: list[ReviewIssue] = Field(default_factory=list)
     passed: bool = False
 
 
 class ModifyPlan(BaseModel):
     scope: str = ""
-    affected_modules: list[str] = []
+    affected_modules: list[str] = Field(default_factory=list)
     reason: str = ""
 
 
