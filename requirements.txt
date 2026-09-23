@@ -1,5 +1,0 @@
-pydantic>=2
-python-dotenv
-langgraph
-langchain-core
-langchain-openai

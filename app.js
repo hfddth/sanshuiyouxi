@@ -8,7 +8,7 @@ const questions=[
 const launchAgent=new URLSearchParams(location.search).get('agent');
 const makersSameOrigin=!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&!location.hostname.endsWith('github.io')?location.origin:'';
 const configuredAgentUrl=String(window.SANSHUI_AGENT_URL||'').trim().replace(/\/$/,'');
-const initialApiBase=(launchAgent||localStorage.getItem('sanshui_agent_api')||configuredAgentUrl||makersSameOrigin).trim().replace(/\/$/,'');
+const initialApiBase=(launchAgent||configuredAgentUrl||localStorage.getItem('sanshui_agent_api')||makersSameOrigin).trim().replace(/\/$/,'');
 if(launchAgent){localStorage.setItem('sanshui_agent_api',initialApiBase);history.replaceState({},'',location.pathname)}
 const state={step:0,answers:{},messages:[],script:null,activeNode:0,panel:'chat',sample:null,apiBase:initialApiBase,sessionId:`web_${Date.now()}`,apiReady:false};
 const icons={project:'卷',spaces:'山',plot_nodes:'线',npcs:'人'};

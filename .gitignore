@@ -1,13 +1,11 @@
 .env
-.edgeone/
-.npm-cache/
-dist/
-outputs/
+.env.*
+!.env.example
+.venv/
 __pycache__/
-*.pyc
-
-# Tencent Cloud EdgeOne
-.env
-.edgeone/*
-.tef_dist/*
-agents/chat/core/
+*.py[cod]
+.pytest_cache/
+outputs/
+logs/
+*.db
+*.sqlite*

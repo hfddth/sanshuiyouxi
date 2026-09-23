@@ -1,70 +1,50 @@
-# 山河入戏 · 文旅 IP 剧本游策划智能体
+# 山水有戏 · 文旅 IP 剧本游策划智能体
 
-这是一个用于“AI Agent × 文旅”比赛展示与后续真实开发的前端原型。
+这是“山水有戏”的网页与 Railway Agent 源码。仓库只保留线上运行所需的静态网页、FastAPI Agent、知识库和容器配置。
 
-## 在线演示
+## 在线地址
 
-https://hfddth.github.io/sanshuiyouxi/
+- 网页：https://hfddth.github.io/sanshuiyouxi/
+- Agent：https://api.hfddth.cn
+- 健康检查：https://api.hfddth.cn/health
 
-腾讯云 EdgeOne Makers 部署版本会在同一站点提供网页与 `/chat` Agent 接口，
-并使用 Makers 内置的 DeepSeek 兼容模型网关。
+网页从 `agent-config.js` 读取 Agent 地址，直接请求 Railway 的 `/chat` 接口；API 密钥只配置在 Railway 环境变量中，不进入网页或 GitHub。
 
-## 腾讯云部署
+## Railway 部署
 
-- 静态网页构建到 `dist/`
-- Agent 入口：`agents/chat/index.py` → `POST /chat`
-- 健康检查：`cloud-functions/health/index.py` → `GET /health`
-- 会话请求通过 `Makers-Conversation-Id` 保持同一 Agent 实例
-- 知识库直接从 `agent/data/nanxijiang` 的授权 Markdown 文件读取
-- 首页提供“一键启动 Agent”入口；同站部署时自动连接 `/chat`
-- 临时跨站 Agent 地址只需在 `agent-config.js` 中替换
+Railway 服务使用：
 
-推送到已关联的 GitHub `main` 分支后，EdgeOne Makers 会自动构建并部署。
+- Root Directory：`/agent`
+- Dockerfile：`/agent/Dockerfile`
+- 健康检查：`/health`
+- 运行端口：Railway 注入的 `PORT`
+- 必需密钥变量：`DEEPSEEK_API_KEY`
 
-## 当前版本 V2
+可选配置变量：
 
-已包含：
-- 景区项目输入、地图/资料上传入口
-- Agent 自主规划工作台
-- 关键 IP 方向选择
-- 完整项目档案
-- 真实空间剧本地图
-- IP / 角色 / 剧情 / 任务 / 线索 / 文化植入
-- 游客端 H5 体验预览
-- 视觉资产生成任务与 Prompt
-- 落地实施架构
-- AI 自动审查
-- 自然语言局部修改演示
-- API Base URL 配置与 `/api/health` 测试
+- `LLM_PROVIDER`
+- `DEEPSEEK_BASE_URL`
+- `DEEPSEEK_MODEL`
+- `ALLOWED_ORIGINS`
 
-## 本地运行
+推送到 `main` 后，由已连接的 Railway 服务自动构建和部署。
 
-直接打开 `index.html` 即可；推荐使用 VS Code Live Server 或任意静态服务器。
-
-## 后续后端建议
+## 仓库结构
 
 ```text
-GitHub
-  ↓
-Railway / Node.js + Express
-  ├── Main Agent
-  ├── LLM API
-  ├── RAG
-  ├── Map Vision
-  ├── Image API
-  ├── PostgreSQL
-  └── Object Storage
+agent/                 Railway Agent
+  data/nanxijiang/     授权知识库
+  Dockerfile           容器构建入口
+  main.py              FastAPI 入口
+agent-config.js        网页使用的 Railway 地址
+app.js                 网页逻辑
+index.html             网页入口
+styles.css             网页样式
+sample-script.json     网页示例
 ```
 
-建议后端提供：
-- `GET /api/health`
-- `POST /api/projects`
-- `POST /api/projects/:id/map`
-- `POST /api/projects/:id/generate`
-- `POST /api/projects/:id/decision`
-- `PATCH /api/projects/:id`
-- `GET /api/projects/:id`
-- `POST /api/images/generate`
+## 安全
 
-> API Key 不要写入前端文件，也不要提交到 GitHub。
-
+- 不要把 `.env` 或真实 API 密钥提交到 GitHub。
+- `.env.example` 只列变量名与示例，不保存真实密钥。
+- 前端不保存、传输或展示模型 API 密钥。
