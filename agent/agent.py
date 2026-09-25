@@ -73,6 +73,12 @@ CONFIRM_KEYWORDS = [
 MODIFY_KEYWORDS = ["换", "改", "调整", "重新", "不要", "删除", "去掉", "再加", "再加一个", "增加"]
 
 
+def is_confirm(message: str) -> bool:
+    """Return whether a reply is an explicit confirmation."""
+    normalized = message.strip().lower().rstrip("!！。.")
+    return normalized in {"确认", "确定", "可以", "同意", "通过", "ok", "okay", "yes", "好"}
+
+
 UPSTREAM_MODULE_NAMES = {
     "upstream_ip": "IP 定位",
     "upstream_world": "世界观",
@@ -294,12 +300,15 @@ def clear_downstream(script: Script, module: str):
         script.npcs = []
 
 
-def make_greeting() -> str:
-    return (
+def make_greeting() -> tuple[str, list[str]]:
+    options = list_available_spots()[:6]
+    greeting = (
         "您好！我是永嘉文旅剧本游策划助手，专门为永嘉景区提供沉浸式剧本游策划服务。\n\n"
         "我们分工协作：我负责整理素材、搭建剧本框架、设计故事与玩法并迭代优化；您来把控方向、敲定方案。\n\n"
-        "现在，请告诉我您想策划的景区名称，我就可以开始构思方案。"
+        "现在，请告诉我您想策划的景区名称，我就可以开始构思方案。\n\n"
+        + "\n".join(f"{index}. {option}" for index, option in enumerate(options, 1))
     )
+    return greeting, options
 
 
 def make_spot_list_reply(spots: list, prefix: str = "") -> str:
@@ -981,7 +990,7 @@ def verify_custom_spot(spot_name: str) -> tuple:
 # ===== 主接口 =====
 def chat(session_id: str, user_message: str) -> dict:
     if session_id not in SESSIONS:
-        greeting = make_greeting()
+        greeting, _ = make_greeting()
         SESSIONS[session_id] = {
             "session_id": session_id,
             "messages": [{"role": "assistant", "content": greeting}],

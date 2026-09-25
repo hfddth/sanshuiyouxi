@@ -1,11 +1,13 @@
 """FastAPI entry point for the tourism script Agent."""
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent import SESSIONS, chat, get_session_state
+from config import DEEPSEEK_API_KEY, KNOWLEDGE_DIR
 
 
 app = FastAPI(title="文旅剧本游策划 Agent")
@@ -37,7 +39,7 @@ app.add_middleware(
 
 
 class ChatRequest(BaseModel):
-    session_id: str
+    session_id: str = Field(pattern=r"^[A-Za-z0-9_-]{1,128}$")
     message: str = ""
 
 
@@ -76,9 +78,22 @@ def get_project(session_id: str):
     return state["script"].model_dump(mode="json")
 
 
+@app.get("/")
+def root():
+    return {"service": "sanshui-agent", "status": "ok"}
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "agent": "v4"}
+    missing = []
+    if not DEEPSEEK_API_KEY:
+        missing.append("model_api_key")
+    knowledge_path = Path(KNOWLEDGE_DIR)
+    if not knowledge_path.is_dir() or not any(knowledge_path.rglob("*.md")):
+        missing.append("knowledge_base")
+    if missing:
+        raise HTTPException(status_code=503, detail={"missing": missing})
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
