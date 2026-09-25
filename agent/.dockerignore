@@ -3,8 +3,9 @@
 !.env.example
 .venv
 logs
-outputs
+outputs*
 __pycache__
 *.pyc
 tests
 chroma_db
+settings.py
