@@ -41,3 +41,5 @@ jobs:
         run: node --check app.js
       - name: Build Railway image
         run: docker build --tag sanshui-agent:ci agent
+      - name: Verify vector store under runtime user
+        run: docker run --rm sanshui-agent:ci python -c "from rag import get_vectorstore; get_vectorstore()"
