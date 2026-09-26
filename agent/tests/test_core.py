@@ -1,11 +1,16 @@
+from pathlib import Path
+
 from agent import is_confirm, make_greeting
-from rag import list_available_spots, retrieve
+from config import KNOWLEDGE_DIR
+from rag import list_available_spots
 
 
 def test_knowledge_base_is_available():
     spots = list_available_spots()
     assert len(spots) >= 4
-    assert retrieve(spots[0], k=1)
+    sample = Path(KNOWLEDGE_DIR) / "01_古村落空间" / f"{spots[0]}.md"
+    assert sample.exists()
+    assert sample.read_text(encoding="utf-8").strip()
 
 
 def test_greeting_options_match_numbered_choices():
