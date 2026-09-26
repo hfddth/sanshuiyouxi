@@ -3,6 +3,7 @@ RAG 检索模块：本地优先 + 相似度阈值触发 + DeepSeek 联网补充 
 """
 import os
 import httpx
+import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
@@ -21,6 +22,7 @@ from config import (
 # ===== 全局单例 =====
 _EMBEDDINGS = None
 _VECTORSTORE = None
+_INIT_LOCK = threading.RLock()
 _WEB_CACHE: dict[str, str] = {}
 _RETRIEVE_CACHE: dict[str, list] = {}
 
@@ -31,20 +33,24 @@ def get_embeddings():
     if _EMBEDDINGS is not None:
         return _EMBEDDINGS
 
-    try:
-        _EMBEDDINGS = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"local_files_only": True},
-        )
-        print("✅ 使用本地缓存的嵌入模型")
-        return _EMBEDDINGS
-    except Exception as e:
-        print(f"⚠️ 本地没有找到模型，准备联网下载：{e}")
+    with _INIT_LOCK:
+        if _EMBEDDINGS is not None:
+            return _EMBEDDINGS
 
-    os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-    _EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    print("✅ 已联网下载并加载嵌入模型")
-    return _EMBEDDINGS
+        try:
+            _EMBEDDINGS = HuggingFaceEmbeddings(
+                model_name=EMBEDDING_MODEL,
+                model_kwargs={"local_files_only": True},
+            )
+            print("✅ 使用本地缓存的嵌入模型")
+            return _EMBEDDINGS
+        except Exception as e:
+            print(f"⚠️ 本地没有找到模型，准备联网下载：{e}")
+
+        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+        _EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        print("✅ 已联网下载并加载嵌入模型")
+        return _EMBEDDINGS
 
 
 def preload():
@@ -60,11 +66,15 @@ def get_vectorstore():
     if _VECTORSTORE is not None:
         return _VECTORSTORE
 
-    _VECTORSTORE = Chroma(
-        persist_directory=CHROMA_PERSIST_DIR,
-        embedding_function=get_embeddings(),
-    )
-    return _VECTORSTORE
+    # 首次检索会从多个线程并发进入这里。Chroma 的 PersistentClient
+    # 初始化不是线程安全的，因此必须保证同一进程只创建一个实例。
+    with _INIT_LOCK:
+        if _VECTORSTORE is None:
+            _VECTORSTORE = Chroma(
+                persist_directory=CHROMA_PERSIST_DIR,
+                embedding_function=get_embeddings(),
+            )
+        return _VECTORSTORE
 
 
 def build_vectorstore():
