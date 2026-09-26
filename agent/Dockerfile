@@ -15,6 +15,10 @@ COPY data ./data
 RUN python -c "from rag import build_vectorstore; build_vectorstore()"
 
 RUN useradd --create-home --uid 10001 appuser
+# Chroma opens its SQLite files in read/write mode even for searches, and the
+# Agent also persists finished scripts below /app. Give the runtime user
+# ownership after all build-time assets have been generated.
+RUN chown -R appuser:appuser /app
 USER appuser
 
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"]
