@@ -66,8 +66,6 @@ def get_vectorstore():
     if _VECTORSTORE is not None:
         return _VECTORSTORE
 
-    # 首次检索会从多个线程并发进入这里。Chroma 的 PersistentClient
-    # 初始化不是线程安全的，因此必须保证同一进程只创建一个实例。
     with _INIT_LOCK:
         if _VECTORSTORE is None:
             _VECTORSTORE = Chroma(
