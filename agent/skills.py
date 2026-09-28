@@ -153,10 +153,11 @@ class Skill03a_ListSpaces:
 class Skill03b_PlotStructure:
     name = "剧情结构与景点绑定"
 
-    def run(self, script: Script, selected_spaces: list[Space], total_nodes: int) -> PlotStructure:
+    def run(self, script: Script, selected_spaces: list[Space], total_nodes: int, user_preference: str = "") -> PlotStructure:
         spaces_text = json.dumps(
             [s.model_dump() for s in selected_spaces], ensure_ascii=False
         )
+        pref = user_preference.strip() if user_preference else "（无）"
         prompt = STAGE3_PROMPT.format(
             ip_name=script.ip.name,
             selling_point=script.ip.selling_point,
@@ -165,13 +166,13 @@ class Skill03b_PlotStructure:
             space_count=len(selected_spaces),
             total_nodes=total_nodes,
             spaces_text=spaces_text,
+            user_preference=pref,
         )
         invoke = get_json_llm(PlotStructureBundle)
         result = invoke(
             [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)]
         )
         return result.plot_structure
-
 
 class Skill03c_SingleNode:
     name = "单个剧情节点生成"
@@ -183,6 +184,7 @@ class Skill03c_SingleNode:
         total_nodes: int,
         node_title: str,
         previous_nodes: list[PlotNode],
+        user_preference: str = "",
     ) -> PlotNode:
         space_text = json.dumps(
             [s.model_dump() for s in script.spaces], ensure_ascii=False
@@ -197,13 +199,21 @@ class Skill03c_SingleNode:
             f"  来源：{c.source}"
             for c in script.culture_resources
         )
-        prev_text = (
-            json.dumps(
-                [n.model_dump() for n in previous_nodes], ensure_ascii=False
-            )
-            if previous_nodes
-            else "（无，这是第一个节点）"
-        )
+        if previous_nodes:
+            prev_summary = [
+                {
+                    "node_id": n.node_id,
+                    "title": n.title,
+                    "space_id": n.space_id,
+                    "scene_desc": (n.scene.get("description", "") if isinstance(n.scene, dict) else "")[:50],
+                    "objective": (n.task.objective or "")[:50],
+                }
+                for n in previous_nodes
+            ]
+            prev_text = json.dumps(prev_summary, ensure_ascii=False, indent=2)
+        else:
+            prev_text = "（无，这是第一个节点）"
+        pref = user_preference.strip() if user_preference else "（无）"
         prompt = STAGE4_SINGLE_NODE_PROMPT.format(
             node_index=node_index,
             total_nodes=total_nodes,
@@ -216,6 +226,7 @@ class Skill03c_SingleNode:
             spaces_text=space_text,
             culture_text=culture_text,
             previous_nodes=prev_text,
+            user_preference=pref,
         )
         invoke = get_json_llm(SingleNodeBundle)
         result = invoke(
@@ -252,17 +263,71 @@ class Skill04_Audit:
     name = "剧本审查"
 
     def run(self, script: Script) -> ReviewResult:
+        # 只传审查需要的字段，避免完整 script 在节点多时超 token。
+        # 每个节点摘要控制在 200 字符以内。
+        space_map = {s.space_id: s.name for s in script.spaces}
+
+        characters_summary = [
+            {"id": c.character_id, "name": c.name, "role": c.role}
+            for c in script.characters
+        ]
+
+        nodes_summary = []
+        for n in script.plot_nodes:
+            nodes_summary.append({
+                "node_id": n.node_id,
+                "title": n.title,
+                "space_id": n.space_id,
+                "space_name": space_map.get(n.space_id, "?"),
+                "objective": (n.task.objective or "")[:60],
+                "interaction_type": n.interaction.type,
+                "clue_sources": [c.source for c in n.clues],
+                "culture_sources": [c.source for c in n.culture],
+            })
+
+        npcs_summary = [
+            {
+                "npc_id": npc.npc_id,
+                "name": npc.name,
+                "role": npc.role,
+                "background": (npc.background or "")[:80],
+                "space_ids": npc.space_ids,
+                "plot_node_ids": npc.plot_node_ids,
+            }
+            for npc in script.npcs
+        ]
+
+        acts_summary = [
+            {"act": a.get("act", ""), "node_titles": a.get("node_titles", [])}
+            for a in script.plot_structure.acts
+        ]
+
+        summary = {
+            "project": {
+                "location": script.project.location,
+                "players": script.project.players,
+                "duration": script.project.duration,
+            },
+            "characters": characters_summary,
+            "plot_structure_acts": acts_summary,
+            "spaces": [{"space_id": s.space_id, "name": s.name} for s in script.spaces],
+            "plot_nodes": nodes_summary,
+            "npcs": npcs_summary,
+        }
+
+        summary_json = json.dumps(summary, ensure_ascii=False, indent=2)
+
         prompt = f"""你是剧本游审查专家。请审查以下剧本项目。
 
-完整项目 JSON：
-{script.model_dump_json(indent=2)}
+项目摘要 JSON：
+{summary_json}
 
 从以下 6 个维度检查：
 1. 世界观一致性（角色名称是否重名、同一人物的身份是否前后一致、NPC 的 background 是否引用了 characters 中不存在的角色）
-2. 剧情逻辑（plot_structure.acts 的 node_titles 是否与 plot_nodes 的 title 一一对应）
-3. 游戏可玩性（玩家数量是否与 project.players 一致，任务是否可完成）
-4. 空间可行性（每个节点绑定的 space_id 是否真实存在，节点是否分布在不同空间，动线是否重复）
-5. 文化真实性（culture.source 是否为文字来源而非 CR 编号）
+2. 剧情逻辑（plot_structure_acts 的 node_titles 是否与 plot_nodes 的 title 一一对应）
+3. 游戏可玩性（project.players 与任务是否匹配，任务是否可完成）
+4. 空间可行性（每个节点的 space_id 是否在 spaces 中，节点是否分布在不同空间，动线是否重复）
+5. 文化真实性（plot_nodes 的 culture_sources 是否为文字来源，不是 CR 编号）
 6. 实施可行性
 
 要求：
@@ -274,7 +339,6 @@ class Skill04_Audit:
         return invoke(
             [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)]
         )
-
 
 class Skill05_ModifyAnalysis:
     name = "修改影响分析"

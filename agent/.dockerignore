@@ -9,3 +9,6 @@ __pycache__
 tests
 chroma_db
 settings.py
+index.html
+*.bat
+*.txt

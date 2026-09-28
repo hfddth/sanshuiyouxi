@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Literal, List
 
 
@@ -133,6 +133,31 @@ class PlotNode(BaseModel):
     closing_narration: str = ""
     prerequisites: List[str] = Field(default_factory=list)
     next_node_id: str = ""
+    @field_validator("scene", mode="before")
+    @classmethod
+    def _fix_scene(cls, v):
+        if v is None:
+            return {"description": "", "plot": ""}
+        if not isinstance(v, dict):
+            return {"description": str(v), "plot": ""}
+        return {
+            "description": v.get("description", "") or "",
+            "plot": v.get("plot", "") or "",
+        }
+
+    @field_validator("task", "interaction", mode="before")
+    @classmethod
+    def _fix_submodel(cls, v):
+        if v is None:
+            return {}
+        return v
+
+    @field_validator("clues", "culture", "rewards", "prerequisites", mode="before")
+    @classmethod
+    def _fix_list(cls, v):
+        if v is None:
+            return []
+        return v
 
 
 class NPC(BaseModel):
