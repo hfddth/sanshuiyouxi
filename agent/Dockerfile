@@ -6,10 +6,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY agent/requirements.txt ./
+COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY agent/ .
+COPY . .
 
 RUN python -c "from rag import build_vectorstore; build_vectorstore()"
 
