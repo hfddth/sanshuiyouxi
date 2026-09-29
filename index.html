@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f8f6ef" />
   <meta name="description" content="山水有戏 · 对话式文旅剧本创作智能体" />
   <title>山水有戏 · 对话式文旅剧本创作</title>
-  <link rel="stylesheet" href="styles.css?v=npc-node-fallback-1" />
+  <link rel="stylesheet" href="styles.css?v=character-entry-1" />
 </head>
 <body>
   <header class="topbar">
@@ -41,7 +41,6 @@
         <nav aria-label="项目导航">
           <button class="active" data-panel="chat"><i>✦</i><span>创作对话</span><em>→</em></button>
           <button data-panel="script"><i>▤</i><span>剧本内容</span><em>→</em></button>
-          <button data-panel="npcs"><i>♙</i><span>人物角色</span><em>→</em></button>
           <button data-panel="library"><i>□</i><span>我的项目</span><em>→</em></button>
         </nav>
         <div class="side-ink" aria-hidden="true"></div>
@@ -80,7 +79,7 @@
         </section>
 
         <section class="panel-view" id="panel-npcs">
-          <header class="workspace-head compact-head"><div><small>CHARACTERS</small><h2>人物角色</h2><p>角色作为独立资源，与真实空间和剧情节点建立关联。</p></div></header>
+          <header class="workspace-head compact-head"><div><small>CHARACTERS</small><h2>全部人物</h2><p>查看当前剧情中的全部人物，以及他们关联的空间和剧情节点。</p></div></header>
           <div class="npc-grid" id="npcGrid"></div>
         </section>
 
@@ -113,7 +112,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="agent-config.js?v=2"></script>
-  <script src="app.js?v=npc-node-fallback-1"></script>
+  <script src="app.js?v=character-entry-1"></script>
 </body>
 </html>
 
