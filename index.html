@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f8f6ef" />
   <meta name="description" content="山水有戏 · 对话式文旅剧本创作智能体" />
   <title>山水有戏 · 对话式文旅剧本创作</title>
-  <link rel="stylesheet" href="styles.css?v=npc-portraits-2" />
+  <link rel="stylesheet" href="styles.css?v=story-reader-2" />
 </head>
 <body>
   <header class="topbar">
@@ -49,10 +49,6 @@
 
       <section class="workspace">
         <section class="panel-view active" id="panel-chat">
-          <header class="workspace-head">
-            <div><small>STORY COPILOT</small><h2>和智能体一起创作剧本</h2><p>无需填写复杂表单，回答四个问题即可生成完整结构。</p></div>
-            <div class="conversation-progress"><span id="progressLabel">第 1 / 4 步</span><div><i id="progressBar"></i></div></div>
-          </header>
           <div class="chat-layout">
             <section class="chat-card">
               <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
@@ -65,6 +61,7 @@
             </section>
             <aside class="structure-card">
               <div class="structure-head"><div><small>LIVE STRUCTURE</small><h3>剧本结构</h3></div><span id="structureState">梳理中</span></div>
+              <div class="conversation-progress structure-progress"><span id="progressLabel">第 1 / 4 步</span><div><i id="progressBar"></i></div></div>
               <div class="structure-list" id="structureList"></div>
               <div class="schema-note"><b>自动整理</b><p>空间、剧情、任务与角色会同步生成</p><span>完成后可直接进入剧本内容查看。</span></div>
             </aside>
@@ -116,7 +113,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="agent-config.js?v=2"></script>
-  <script src="app.js?v=npc-portraits-3"></script>
+  <script src="app.js?v=story-reader-2"></script>
 </body>
 </html>
 

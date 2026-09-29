@@ -44,3 +44,29 @@
 
 
 @media(max-width:800px){.map-node{width:108px}.map-landmark{width:78px;height:66px}.map-node-label{margin-top:-5px}.map-node em{max-width:78px;overflow:hidden;text-overflow:ellipsis}.story-map.dense .map-node{width:92px}.story-map.dense .map-landmark{width:62px;height:52px}.story-map.dense .map-node em{max-width:65px}.route-shadow{stroke-width:6}.route-line{stroke-width:3}}
+
+/* Keep the story map steady while the reader scrolls through node details. */
+@media(min-width:1101px){
+  #panel-script.active .script-layout{align-items:start}
+  #panel-script.active .map-card{position:sticky;top:82px;height:calc(100dvh - 96px);min-height:620px;max-height:764px;overflow:hidden}
+  #panel-script.active .map-card .story-map{height:calc(100% - 54px)}
+  #panel-script.active .node-detail{height:calc(100dvh - 96px);min-height:620px;max-height:764px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:5px;scrollbar-width:thin;scrollbar-color:#9bada4 transparent}
+  #panel-script.active .node-detail::-webkit-scrollbar{width:7px}
+  #panel-script.active .node-detail::-webkit-scrollbar-thumb{background:#9bada4;border-radius:99px}
+  #panel-script.active .node-detail::-webkit-scrollbar-track{background:transparent}
+}
+.node-pager button:disabled{opacity:.35;cursor:default}
+.node-loop-action{width:100%;border:1px solid #aac0b5;background:linear-gradient(135deg,#edf4ef,#f8f5ea);border-radius:13px;padding:14px 16px;margin-top:12px;display:grid;grid-template-columns:38px 1fr;grid-template-rows:auto auto;text-align:left;column-gap:11px;color:#315e52}
+.node-loop-action>span{grid-row:1/3;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#315e52;color:#fff;font-size:20px}
+.node-loop-action>b{font:600 14px var(--serif);align-self:end}
+.node-loop-action>small{font-size:10px;color:#76877f;align-self:start;margin-top:3px}
+.node-loop-action:hover{border-color:#6e9383;box-shadow:0 8px 20px rgba(49,94,82,.1)}
+
+/* The conversation starts directly beneath the top navigation. */
+.structure-progress{width:100%;margin:15px 0 2px}
+.structure-progress span{text-align:left;margin-bottom:7px;font-size:10px}
+@media(min-width:801px){
+  #panel-chat .chat-layout{min-height:calc(100dvh - 172px)}
+  #panel-chat .chat-card,#panel-chat .structure-card{min-height:calc(100dvh - 172px)}
+  #panel-chat .chat-messages{max-height:none;min-height:0}
+}
