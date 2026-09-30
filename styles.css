@@ -103,6 +103,10 @@
   animation:agent-wait-spin .8s linear infinite
 }
 @keyframes agent-wait-spin{to{transform:rotate(360deg)}}
+.new-conversation-btn{min-height:38px;padding:8px 16px;border:1px solid #9eb2a8;border-radius:11px;background:#315e52;color:#fff;display:inline-flex;align-items:center;gap:7px;font-size:13px;box-shadow:0 5px 14px rgba(49,94,82,.12)}
+.new-conversation-btn:hover{background:#254d43;border-color:#254d43}
+.new-conversation-btn>span{font-size:17px;line-height:1}
+.new-conversation-btn[hidden]{display:none!important}
 #panel-chat .chat-layout{grid-template-columns:minmax(0,1fr)}
 #panel-chat .chat-card{width:100%}
 @media(min-width:801px){
@@ -146,3 +150,4 @@
   #panel-chat .structure-card::-webkit-scrollbar-thumb{background:#9bada4;border-radius:99px}
   #panel-chat .structure-card::-webkit-scrollbar-track{background:transparent}
 }
+@media(max-width:800px){.new-conversation-btn{min-height:36px;padding:7px 11px;font-size:12px}.new-conversation-btn>span{font-size:15px}}
