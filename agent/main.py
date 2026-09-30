@@ -17,8 +17,8 @@ def _allowed_origins() -> list[str]:
     configured = os.getenv(
         "ALLOWED_ORIGINS",
         "https://hfddth.github.io,https://sanshuiyouxi.zxiehuan898572.chatgpt.site,"
-        "https://sanshuiyouxi-m2ycntgf.edgeone.cool,http://localhost:5500,"
-        "http://127.0.0.1:5500",
+        "https://sanshuiyouxi-m2ycntgf.edgeone.cool,https://hfddth.cn,"
+        "https://www.hfddth.cn,http://localhost:5500,http://127.0.0.1:5500",
     )
     return [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
 
@@ -27,6 +27,7 @@ app = FastAPI(title="文旅剧本游策划 Agent", version="8")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins(),
+    allow_origin_regex=r"^(https://([a-z0-9-]+\.)?hfddth\.cn|http://(localhost|127\.0\.0\.1)(:\d+)?)$",
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Makers-Conversation-Id"],

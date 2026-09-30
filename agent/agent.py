@@ -1424,7 +1424,7 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         state["script"].project.duration = "60分钟"
         state["script"].project.players = "2-4人"
         state["script"].project.summary = f"以{chosen}为舞台的沉浸式剧本游"
-        state["script"].project.cover = "https://via.placeholder.com/800x450/3498db/ffffff?text=Script+Game"
+        state["script"].project.cover = "assets/maps/map-01.webp"
 
         skill01 = Skill01_CultureAnalysis()
         state["script"].culture_resources = skill01.run(chosen, "沉浸式剧本游")
