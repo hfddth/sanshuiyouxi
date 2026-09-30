@@ -77,8 +77,8 @@
 .structure-progress span{text-align:left;margin-bottom:7px;font-size:10px}
 .agent-waiting-bar{
   width:max-content;
-  max-width:min(94%,620px);
-  margin:4px auto 10px;
+  max-width:min(calc(100% - 56px),620px);
+  margin:2px 0 14px 45px;
   padding:10px 17px;
   display:flex;
   align-items:center;
