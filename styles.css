@@ -103,7 +103,10 @@
   animation:agent-wait-spin .8s linear infinite
 }
 @keyframes agent-wait-spin{to{transform:rotate(360deg)}}
+#panel-chat .chat-layout{grid-template-columns:minmax(0,1fr)}
+#panel-chat .chat-card{width:100%}
 @media(min-width:801px){
+  #panel-chat .bubble{max-width:min(90%,1100px)}
   #panel-chat .chat-layout{
     height:calc(100dvh - 172px);
     min-height:0;
