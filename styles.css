@@ -40,6 +40,7 @@
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .mobile-nav[hidden]{display:none!important}
+.mobile-nav{display:none}
 @media(max-width:800px){.home-art{background-position:82% center}}
 
 
@@ -74,8 +75,71 @@
 /* The conversation starts directly beneath the top navigation. */
 .structure-progress{width:100%;margin:15px 0 2px}
 .structure-progress span{text-align:left;margin-bottom:7px;font-size:10px}
+.agent-waiting-bar{
+  width:max-content;
+  max-width:min(94%,620px);
+  margin:4px auto 10px;
+  padding:10px 17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border-radius:999px;
+  background:#344d5e;
+  color:#f7fafb;
+  box-shadow:0 8px 22px rgba(35,55,67,.2);
+  font-size:12px;
+  line-height:1.4;
+  text-align:center
+}
+.agent-waiting-bar[hidden]{display:none!important}
+.agent-waiting-bar i{
+  width:15px;
+  height:15px;
+  flex:0 0 auto;
+  border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:agent-wait-spin .8s linear infinite
+}
+@keyframes agent-wait-spin{to{transform:rotate(360deg)}}
 @media(min-width:801px){
-  #panel-chat .chat-layout{min-height:calc(100dvh - 172px)}
-  #panel-chat .chat-card,#panel-chat .structure-card{min-height:calc(100dvh - 172px)}
-  #panel-chat .chat-messages{max-height:none;min-height:0}
+  #panel-chat .chat-layout{
+    height:calc(100dvh - 172px);
+    min-height:0;
+    align-items:start;
+    overflow:hidden
+  }
+  #panel-chat .chat-card{
+    height:100%;
+    min-height:0;
+    overflow:hidden
+  }
+  #panel-chat .chat-messages{
+    max-height:none;
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+    scrollbar-width:thin;
+    scrollbar-color:#9bada4 transparent
+  }
+  #panel-chat .chat-messages::-webkit-scrollbar{width:7px}
+  #panel-chat .chat-messages::-webkit-scrollbar-thumb{background:#9bada4;border-radius:99px}
+  #panel-chat .chat-messages::-webkit-scrollbar-track{background:transparent}
+  #panel-chat .structure-card{
+    position:sticky;
+    top:82px;
+    align-self:start;
+    width:100%;
+    height:100%;
+    min-height:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:#9bada4 transparent
+  }
+  #panel-chat .structure-card::-webkit-scrollbar{width:7px}
+  #panel-chat .structure-card::-webkit-scrollbar-thumb{background:#9bada4;border-radius:99px}
+  #panel-chat .structure-card::-webkit-scrollbar-track{background:transparent}
 }
