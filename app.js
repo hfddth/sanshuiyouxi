@@ -64,10 +64,10 @@ function askCurrent(){const q=questions[state.step];if(!q)return;addMessage('ass
 function renderQuick(items=[],actions=false){const box=$('#quickReplies');box.innerHTML=items.map((x,i)=>`<button type="button" ${actions?`data-result-action="${i}"`:`data-quick="${esc(x)}"`}>${esc(x)}</button>`).join('');$$('[data-quick]',box).forEach(b=>b.addEventListener('click',()=>{$('#chatInput').value=b.dataset.quick;submitChat()}));$$('[data-result-action]',box).forEach(b=>b.addEventListener('click',()=>showPanel('script')))}
 function renderProgress(){const complete=Math.min(state.step,questions.length);$('#progressLabel').textContent=state.script?'剧本已生成':`第 ${Math.min(state.step+1,4)} / 4 步`;$('#progressBar').style.width=`${state.script?100:Math.max(8,(complete/4)*100)}%`}
 function renderStructure(){const data=[
-  ['project','项目基本信息',state.answers.scenic||'等待景区名称'],
-  ['spaces','真实景区空间',state.answers.spaces||'等待地点'],
-  ['plot_nodes','剧情与任务',state.answers.culture||'等待文化主题'],
-  ['npcs','角色与互动',state.answers.style||'等待体验方式']
+  ['project','IP与世界观',state.answers.scenic||'等待景区名称'],
+  ['spaces','人物与故事',state.answers.spaces||'等待地点'],
+  ['plot_nodes','剧情结构',state.answers.culture||'等待文化主题'],
+  ['npcs','剧情节点',state.answers.style||'等待体验方式']
 ];
 $('#structureList').innerHTML=data.map(([k,n,v],i)=>`<div class="structure-item ${state.answers[questions[i].key]?'done':''}"><i>${icons[k]}</i><div><b>${n}</b><small>${esc(v)}</small></div><em>${state.answers[questions[i].key]?'✓':'待补充'}</em></div>`).join('');$('#structureState').textContent=state.script?'结构完整':'梳理中'}
 
