@@ -401,7 +401,7 @@ def save_script(session_id: str, script: Script, suffix: str = ""):
 
 # ===== 格式化输出 =====
 
-def format_node_card(node: PlotNode, space_name: str, index: int, total: int) -> str:
+def format_node_card(node: PlotNode, space_name: str, index: int, total: int, is_last: bool = False) -> str:
     lines = []
     lines.append("━" * 30)
     lines.append(f"节点 {node.node_id}　({index}/{total})")
@@ -450,7 +450,10 @@ def format_node_card(node: PlotNode, space_name: str, index: int, total: int) ->
     lines.append(f"  {node.closing_narration}")
     lines.append("")
     lines.append("━" * 30)
-    lines.append("回复「确认」生成下一个节点，或告诉我想调整这个节点。")
+    if is_last:
+        lines.append("回复「确认」进入最终审查并输出完整策划案，或告诉我想调整这个节点。")
+    else:
+        lines.append("回复「确认」生成下一个节点，或告诉我想调整这个节点。")
     return "\n".join(lines)
 
 
@@ -774,8 +777,8 @@ def _parse_space_picks(user_message: str, candidates: list) -> list:
 
 def _parse_remove_targets(user_message: str, selected: list, candidates: list) -> list:
     """
-    解析删除目标。用户说的"1""小三峡"优先按【已选列表】理解，
-    因为用户看到的是"当前已选 N 个景点：1. xxx 2. xxx"。
+    解析删除目标。序号优先按【已选列表】理解，越界时回退到【候选列表】
+    （但回退时必须对应项确实在已选中）。
     """
     import re
     targets = []
@@ -799,13 +802,19 @@ def _parse_remove_targets(user_message: str, selected: list, candidates: list) -
         if hit:
             continue
 
-        # 2. 序号匹配【已选列表】
+        # 2. 序号：先按【已选列表】，越界回退到【候选列表】
         m = re.search(r"\d+", token)
         if m:
             idx = int(m.group()) - 1
             if 0 <= idx < len(selected):
                 if selected[idx] not in targets:
                     targets.append(selected[idx])
+                continue
+            # 回退：候选列表 + 必须是已选
+            if 0 <= idx < len(candidates):
+                cand_name = candidates[idx].name
+                if cand_name in selected and cand_name not in targets:
+                    targets.append(cand_name)
             continue
 
         # 3. 中文数字
@@ -815,10 +824,13 @@ def _parse_remove_targets(user_message: str, selected: list, candidates: list) -
                 if 0 <= idx < len(selected):
                     if selected[idx] not in targets:
                         targets.append(selected[idx])
+                elif 0 <= idx < len(candidates):
+                    cand_name = candidates[idx].name
+                    if cand_name in selected and cand_name not in targets:
+                        targets.append(cand_name)
                 break
 
     return targets
-
 
 
 def _try_add_new_space(state: AgentState, user_message: str) -> str:
@@ -902,13 +914,13 @@ def _format_stage3_reply(state: AgentState, prefix: str = "") -> str:
         lines.append(f"当前已选 {len(selected)} 个景点：")
         for i, name in enumerate(selected, 1):
             lines.append(f"  {i}. {name}")
-    else:
-        lines.append("当前还没有选择景点。")
 
+    selected_set = set(selected)
     lines.append("")
     lines.append("候选景点（由联网检索景区信息提取所得，供您挑选）：")
     for i, s in enumerate(script.spaces, 1):
-        lines.append(f"  {i}. {s.name}")
+        mark = "    [已选]" if s.name in selected_set else ""
+        lines.append(f"  {i}. {s.name}{mark}")
 
     lines.append("")
     lines.append("您可以：")
@@ -917,9 +929,6 @@ def _format_stage3_reply(state: AgentState, prefix: str = "") -> str:
         f"建议选 {MIN_SPACES}-{MAX_SPACES} 个"
     )
     lines.append(f"· 说“你帮我选”自动挑 {MIN_SPACES}-{MAX_SPACES} 个")
-    lines.append("· 说“删除1”或“去掉XXX”可移除已选景点")
-    lines.append("· 说“够了”“就这些”“确认”开始生成剧情结构")
-    lines.append("· 候选里没有的景点也可以直接说，我会联网查证")
     return "\n".join(lines)
 def run_stage3_handle_input(state: AgentState, user_message: str) -> str:
     script: Script = state["script"]
@@ -929,7 +938,12 @@ def run_stage3_handle_input(state: AgentState, user_message: str) -> str:
     if any(k in user_message for k in ["你帮我选", "帮我选", "自动选", "随便选"]):
         selected = [s.name for s in candidates[:5]]
         state["selected_space_names"] = selected
-        return _format_stage3_reply(state, f"已自动为您选择 {len(selected)} 个景点。")
+
+        # 自动选完直接进入下一步：生成结构 + 第 1 个节点
+        reply = run_stage3_generate(state, selected)
+        reply += "\n\n正在生成第 1 个剧情节点...\n\n"
+        reply += run_stage4_next_node(state)
+        return reply
 
     # ===== 纯指令词：不是景点名，不联网搜 =====
     PURE_COMMAND_PHRASES = [
@@ -992,6 +1006,15 @@ def run_stage3_handle_input(state: AgentState, user_message: str) -> str:
     state["selected_space_names"] = selected
 
     msg = f"已加入 {added} 个景点。" if added else "这些景点已在列表中。"
+
+    # ===== 达到 MIN_SPACES 后自动进入下一环节（无需确认）=====
+    if added > 0 and len(selected) >= MIN_SPACES:
+        auto_msg = f"{msg}\n已选 {len(selected)} 个景点，正在生成剧情结构与绑定...\n\n"
+        auto_msg += run_stage3_generate(state, selected)
+        auto_msg += "\n\n正在生成第 1 个剧情节点...\n\n"
+        auto_msg += run_stage4_next_node(state)
+        return auto_msg
+
     return _format_stage3_reply(state, msg)
 
 def run_stage3_generate(state: AgentState, selected_names: list, user_preference: str = "") -> str:
@@ -1028,21 +1051,14 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
         for b in plot_structure.space_bindings
     )
 
-    text = f"""【第三阶段：剧情结构与景点绑定】
-
-已选景点（{len(selected)} 个）：
-{chr(10).join(f'· {s.name}' for s in script.spaces)}
-
-剧情分幕：
+    text = f"""剧情分幕：
 {acts_text}
 
 景点绑定：
 {bindings_text}
 
-预计生成 {total_nodes} 个剧情节点（根据景点数动态计算）。
+预计生成 {total_nodes} 个剧情节点。"""
 
----
-回复「确认」开始逐个生成剧情节点，或告诉我想调整什么。"""
     # ===== 对齐 planned_node_titles 与 total_nodes =====
     # LLM 不保证严格返回 total_nodes 个标题，这里强制对齐，避免后续
     # current_node_index 越界或提前结束。
@@ -1087,7 +1103,7 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
         state["total_nodes"] = total_nodes
         print(f"⚠️ LLM 返回的节点数不足 {total_nodes}，已按实际数量对齐")
 
-    state["stage"] = "stage3_confirm"
+    # 不再单独确认结构，stage 由调用者（生成第 1 个节点）设置
     state["planned_node_titles"] = raw_titles
     state["current_node_index"] = 0
     return text
@@ -1114,6 +1130,10 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "") -> str:
         user_preference=user_preference,
     )
 
+    # 强制重写 clue_id，保证全局唯一（LLM 每个节点都从 C01 开始）
+    for i, c in enumerate(node.clues, 1):
+        c.clue_id = f"{node.node_id}-C{i:02d}"
+
     if script.plot_nodes:
         script.plot_nodes[-1].next_node_id = node.node_id
         node.prerequisites = [script.plot_nodes[-1].node_id]
@@ -1127,7 +1147,8 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "") -> str:
             space_name = s.name
             break
 
-    return format_node_card(node, space_name, idx + 1, len(planned))
+    is_last = (idx + 1 >= len(planned))
+    return format_node_card(node, space_name, idx + 1, len(planned), is_last=is_last)
 
 # ===== 阶段 5：NPC + 审查 + 格式化完整策划案 =====
 def run_stage5_final(state: AgentState) -> str:
@@ -1310,11 +1331,20 @@ def chat(session_id: str, user_message: str) -> dict:
     lock = _get_session_lock(session_id)
     with lock:
         resp = _chat_impl(session_id, user_message)
-        # 统一注入 stage5_audit_lines
+
         if session_id in SESSIONS:
-            resp["stage5_audit_lines"] = SESSIONS[session_id].get("stage5_audit_lines", [])
+            state = SESSIONS[session_id]
+            resp["stage5_audit_lines"] = state.get("stage5_audit_lines", [])
+
+            # 特判：stage4_confirm 且已是最后一个节点，换 next_hint
+            if resp.get("stage") == "stage4_confirm":
+                idx = state.get("current_node_index", 0)
+                planned = state.get("planned_node_titles", [])
+                if planned and idx + 1 >= len(planned):
+                    resp["next_hint"] = "AI 思考中 · 正在生成 NPC 并执行六维审查，即将输出完整策划案..."
         else:
             resp["stage5_audit_lines"] = []
+
         return resp
 
 
@@ -1467,8 +1497,9 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
                 if len(selected) < 1:
                     reply = "还没选择任何景点，请先选 1-3 个。\n\n" + _format_stage3_reply(state)
                 else:
-                    reply = f"好的，共 {len(selected)} 个景点。正在生成剧情结构与绑定...\n\n"
-                    reply += run_stage3_generate(state, selected)
+                    reply = run_stage3_generate(state, selected)
+                    reply += "\n\n正在生成第 1 个剧情节点...\n\n"
+                    reply += run_stage4_next_node(state)
                 state["force_confirm"] = False
         elif intent == "cancel":  # ← 新增
             reply = (
@@ -1480,69 +1511,6 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         else:
             reply = run_stage3_handle_input(state, user_message)
             state["force_confirm"] = False
-
-        state["messages"].append({"role": "user", "content": user_message})
-        state["messages"].append({"role": "assistant", "content": reply})
-        SESSIONS[session_id] = state
-        return make_response(reply, state["script"], state["stage"])
-
-    # 阶段 3 确认
-    if stage == "stage3_confirm":
-        intent = judge_intent(user_message, "确认剧情结构与景点绑定")
-        script: Script = state["script"]
-
-        if intent == "confirm":
-            reply = "正在生成第 1 个剧情节点...\n\n" + run_stage4_next_node(state)
-        elif intent in ("modify", "add", "remove"):
-            target = _classify_modify_intent(user_message, script.spaces)
-
-            if target == "space":
-                # 如果是明确的"删除 XX 景点"，直接删除并重新生成剧情结构
-                REMOVE_KW = ["删除", "去掉", "移除", "不要", "删掉", "删了", "去掉一个"]
-                is_remove = any(k in user_message for k in REMOVE_KW)
-
-                if is_remove:
-                    selected_names = [s.name for s in script.spaces]
-                    targets = _parse_remove_targets(user_message, selected_names, script.spaces)
-                    if not targets:
-                        reply = "请明确要删除哪个景点，例如「删除丽水古街长廊」或「删除1」。"
-                    else:
-                        remaining = [n for n in selected_names if n not in targets]
-                        if not remaining:
-                            reply = "至少需要保留一个景点。请重新选择景点：\n\n"
-                            reply += run_stage3_prompt(state, keep_selected=True)
-                        else:
-                            state["selected_space_names"] = remaining
-                            reply = f"已删除 {len(targets)} 个景点：{'、'.join(targets)}。正在重新生成剧情结构...\n\n"
-                            reply += run_stage3_generate(state, remaining)
-                else:
-                    reply = "好的，请重新选择景点（已保留您之前的选择）：\n\n"
-                    reply += run_stage3_prompt(state, keep_selected=True)
-
-            elif target.startswith("upstream_"):
-                module_name = UPSTREAM_MODULE_NAMES.get(target, "上游内容")
-                reply = (
-                    f"您想修改的是「{module_name}」。\n\n"
-                    f"当前处于剧情结构确认阶段，修改「{module_name}」会重新生成"
-                    f"角色、故事、剧情结构，以及后续所有节点。\n\n"
-                    f"请回复：\n"
-                    f"· 「确认」——执行修改并重新生成\n"
-                    f"· 「取消」——放弃修改，停留在当前阶段"
-                )
-                state["pending_upstream_modify"] = user_message
-                state["pending_upstream_module"] = target
-                state["stage"] = "stage4_confirm_upstream"
-                state["pending_upstream_from_stage3"] = True
-
-            else:  # "plot"
-                selected_names = [s.name for s in script.spaces]
-                reply = "正在根据您的意见调整剧情结构...\n\n"
-                reply += run_stage3_generate(state, selected_names, user_preference=user_message)
-
-        elif intent == "cancel":
-            reply = "如果当前结构与绑定没问题，请回复「确认」开始生成剧情节点；如果想重选景点，请直接告诉我新的景点名单。"
-        else:
-            reply = "请回复「确认」开始生成剧情节点，或告诉我您想调整哪些地方。"
 
         state["messages"].append({"role": "user", "content": user_message})
         state["messages"].append({"role": "assistant", "content": reply})
@@ -1614,6 +1582,8 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
                     f"正在重新生成剧情结构与绑定...\n\n"
                 )
                 reply += run_stage3_generate(state, remaining)
+                reply += "\n\n正在生成第 1 个剧情节点...\n\n"
+                reply += run_stage4_next_node(state)
                 state["messages"].append({"role": "user", "content": user_message})
                 state["messages"].append({"role": "assistant", "content": reply})
                 SESSIONS[session_id] = state
@@ -1740,22 +1710,16 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
                 reply += run_stage2(state, user_preference=modify_request)
 
             elif module == "upstream_structure":
-                # 从 stage4 来的"改景点"，回到 stage3 选景点界面
-                if not from_stage3:
-                    state["pending_upstream_modify"] = ""
-                    state["pending_upstream_module"] = ""
-                    state["pending_upstream_from_stage3"] = False
-                    reply = "好的，请重新选择景点（已保留您之前的选择）：\n\n"
-                    reply += run_stage3_prompt(state, keep_selected=True)
-                    state["messages"].append({"role": "user", "content": user_message})
-                    state["messages"].append({"role": "assistant", "content": reply})
-                    SESSIONS[session_id] = state
-                    return make_response(reply, state["script"], state["stage"])
-                else:
-                    clear_downstream(script, module)
-                    selected = [s.name for s in script.spaces]
-                    reply = "正在根据您的意见重新生成剧情结构...\n\n"
-                    reply += run_stage3_generate(state, selected, user_preference=modify_request)
+                # 重新生成剧情结构 + 生成第 1 个节点
+                clear_downstream(script, module)
+                selected = [s.name for s in script.spaces]
+                state["planned_node_titles"] = []
+                state["current_node_index"] = 0
+
+                reply = "正在根据您的意见重新生成剧情结构...\n\n"
+                reply += run_stage3_generate(state, selected, user_preference=modify_request)
+                reply += "\n\n正在生成第 1 个剧情节点...\n\n"
+                reply += run_stage4_next_node(state)
             else:
                 reply = "修改对象未识别，请重新输入修改意见。"
                 state["stage"] = "stage3_confirm" if from_stage3 else "stage4_confirm"
