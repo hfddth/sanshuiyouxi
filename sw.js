@@ -1,12 +1,12 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-5';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-6';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-5',
-  './agent-config.js?v=cn-stable-5',
-  './docx-export.js?v=cn-stable-5',
-  './app.js?v=cn-stable-5',
-  './sample-script.json?v=cn-stable-5',
+  './styles.css?v=cn-stable-6',
+  './agent-config.js?v=cn-stable-6',
+  './docx-export.js?v=cn-stable-6',
+  './app.js?v=cn-stable-6',
+  './sample-script.json?v=cn-stable-6',
   './assets/maps/map-01.webp',
   './assets/maps/map-02.webp',
   './assets/maps/map-03.webp',
