@@ -1,11 +1,11 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-2';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-3';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-2',
-  './agent-config.js?v=cn-stable-2',
-  './app.js?v=cn-stable-2',
-  './sample-script.json?v=cn-stable-2',
+  './styles.css?v=cn-stable-3',
+  './agent-config.js?v=cn-stable-3',
+  './app.js?v=cn-stable-3',
+  './sample-script.json?v=cn-stable-3',
   './assets/maps/map-01.webp',
   './assets/maps/map-02.webp',
   './assets/maps/map-03.webp',
@@ -93,3 +93,4 @@ self.addEventListener('fetch',event=>{
   }
   if(/\.(?:webp|png|jpe?g|svg|ico)$/.test(url.pathname))event.respondWith(cacheFirst(request));
 });
+
