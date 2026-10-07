@@ -236,7 +236,7 @@
     return{xml:parts.filter(Boolean).join(''),sectionCount:2+(ipItems.length?1:0)+(worldItems.length?1:0)};
   }
 
-  function buildDocument(script,portraitMap=new Map()){
+  function buildDocument(script,portraitMap=new Map(),mapImage=null){
     const project=script.project||{},name=text(project.name)||'未命名剧本',location=text(project.location)||text(project.scenic),type=text(project.type)||'沉浸式剧本游',players=text(project.players)||'建议人数待定',duration=text(project.duration)||'建议时长待定',identity=text(project.player_identity||project.player_role||project.identity)||'故事参与者',parts=[];
     parts.push(paragraph(`《${name.replace(/^《|》$/g,'')}》`,'Title',{align:'center'}));
     parts.push(paragraph(''),paragraph(''));
@@ -252,6 +252,7 @@
     parts.push(labeled('故事类型',type),labeled('故事地点',location),labeled('建议人数',players),labeled('建议时长',duration),labeled('玩家身份',identity));
     const introduction=introductionSection(script);
     parts.push(introduction.xml);
+    if(mapImage)parts.push(heading('剧情地图',2),imageParagraph(mapImage));
     (script.plot_nodes||[]).forEach((node,index)=>parts.push(nodeSection(script,node,index,portraitMap)));
     const base=introduction.sectionCount+1+(script.plot_nodes||[]).length;
     parts.push(npcSection(script,base),flowSection(script,base+((script.npcs||[]).length?1:0)));
@@ -272,8 +273,8 @@
   <w:style w:type="paragraph" w:styleId="ListNumber"><w:name w:val="List Number"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="360" w:hanging="180"/></w:pPr></w:style>
 </w:styles>`}
 
-  function buildDocxBytes(script,portraits=[]){
-    const portraitMap=new Map(portraits.map(item=>[String(item.nodeId),item])),media=[...new Map(portraits.map(item=>[item.relId,item])).values()],built=buildDocument(script,portraitMap),now=new Date().toISOString(),footerTitle=`《${built.title.replace(/^《|》$/g,'')}》`;
+  function buildDocxBytes(script,portraits=[],mapImage=null){
+    const portraitMap=new Map(portraits.map(item=>[String(item.nodeId),item])),allMedia=mapImage?[...portraits,mapImage]:portraits,media=[...new Map(allMedia.map(item=>[item.relId,item])).values()],built=buildDocument(script,portraitMap,mapImage),now=new Date().toISOString(),footerTitle=`《${built.title.replace(/^《|》$/g,'')}》`;
     const document=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${built.body}<w:sectPr><w:footerReference w:type="default" r:id="rId1"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1247" w:right="1417" w:bottom="1247" w:left="1417" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
     const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Microsoft YaHei" w:hAnsi="Microsoft YaHei" w:eastAsia="微软雅黑"/><w:color w:val="888888"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>${xml(footerTitle)}</w:t></w:r></w:p></w:ftr>`;
     const imageRelationships=media.map(item=>`<Relationship Id="${item.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${item.fileName}"/>`).join('');
@@ -321,9 +322,9 @@
     return portraits;
   }
 
-  async function exportScript(script){
+  async function exportScript(script,options={}){
     if(!script||!script.project)throw new Error('没有可导出的剧本内容');
-    const portraits=await preparePortraits(script),bytes=buildDocxBytes(script,portraits),blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    const portraits=await preparePortraits(script),mapSource=options.mapImage||null,mapImage=mapSource?{relId:'rIdMap',fileName:'story-map.jpg',data:mapSource.data,cx:5760720,cy:Math.min(4069080,Math.round(5760720*mapSource.height/mapSource.width)),docPrId:2,name:'剧情地图'}:null,bytes=buildDocxBytes(script,portraits,mapImage),blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download=`${safeFileName(script.project.name)}_完整剧本.docx`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
 
