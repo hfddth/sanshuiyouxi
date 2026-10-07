@@ -99,7 +99,24 @@
 
   function findSpace(script,node){return(script.spaces||[]).find(space=>String(space.space_id)===String(node.space_id))||{}}
 
-  function nodeSection(script,node,index){
+  function relationIds(value){return(Array.isArray(value)?value:[value]).filter(Boolean).map(String)}
+
+  function findNodeNpc(script,node){
+    const npcs=script.npcs||[],nodeRefs=relationIds(node.npc_ids||node.character_ids||node.npc_id||node.character_id);
+    const direct=nodeRefs.length?npcs.find(npc=>nodeRefs.includes(String(npc.npc_id||npc.character_id||npc.id||npc.name))):null;
+    if(direct)return direct;
+    return npcs.find(npc=>relationIds(npc.plot_node_ids||npc.node_ids||npc.plot_nodes||npc.plot_node_id).includes(String(node.node_id)))
+      ||npcs.find(npc=>relationIds(npc.space_ids||npc.location_ids||npc.spaces||npc.space_id).includes(String(node.space_id)))
+      ||null;
+  }
+
+  function imageParagraph(image){
+    if(!image)return'';
+    const name=xml(image.name||'剧情人物');
+    return `<w:p><w:pPr><w:jc w:val="left"/><w:spacing w:before="80" w:after="100"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${image.cx}" cy="${image.cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${image.docPrId}" name="${name}人物画像" descr="${name}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="${name}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${image.relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${image.cx}" cy="${image.cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  }
+
+  function nodeSection(script,node,index,portraitMap){
     const space=findSpace(script,node),task=node.task||{},scene=node.scene||{},interaction=node.interaction||{},parts=[];
     parts.push(heading(`第${chineseNumber(index+1)}章｜${text(node.title)||`剧情节点 ${index+1}`}`,1));
     if(text(space.name)||text(space.description)){
@@ -107,6 +124,8 @@
       parts.push(body([text(space.space_id),text(space.name),text(space.type)].filter(Boolean).join('｜')));
       parts.push(body(space.description));
     }
+    const portrait=portraitMap.get(String(node.node_id));
+    if(portrait)parts.push(imageParagraph(portrait));
     if(text(node.opening_narration)){
       parts.push(heading(index===0?'剧情开场':'前旁白',2),quote(node.opening_narration));
     }
@@ -217,7 +236,7 @@
     return{xml:parts.filter(Boolean).join(''),sectionCount:2+(ipItems.length?1:0)+(worldItems.length?1:0)};
   }
 
-  function buildDocument(script){
+  function buildDocument(script,portraitMap=new Map()){
     const project=script.project||{},name=text(project.name)||'未命名剧本',location=text(project.location)||text(project.scenic),type=text(project.type)||'沉浸式剧本游',players=text(project.players)||'建议人数待定',duration=text(project.duration)||'建议时长待定',identity=text(project.player_identity||project.player_role||project.identity)||'故事参与者',parts=[];
     parts.push(paragraph(`《${name.replace(/^《|》$/g,'')}》`,'Title',{align:'center'}));
     parts.push(paragraph(''),paragraph(''));
@@ -233,7 +252,7 @@
     parts.push(labeled('故事类型',type),labeled('故事地点',location),labeled('建议人数',players),labeled('建议时长',duration),labeled('玩家身份',identity));
     const introduction=introductionSection(script);
     parts.push(introduction.xml);
-    (script.plot_nodes||[]).forEach((node,index)=>parts.push(nodeSection(script,node,index)));
+    (script.plot_nodes||[]).forEach((node,index)=>parts.push(nodeSection(script,node,index,portraitMap)));
     const base=introduction.sectionCount+1+(script.plot_nodes||[]).length;
     parts.push(npcSection(script,base),flowSection(script,base+((script.npcs||[]).length?1:0)));
     return{body:parts.filter(Boolean).join(''),title:name};
@@ -253,28 +272,58 @@
   <w:style w:type="paragraph" w:styleId="ListNumber"><w:name w:val="List Number"/><w:basedOn w:val="Normal"/><w:pPr><w:ind w:left="360" w:hanging="180"/></w:pPr></w:style>
 </w:styles>`}
 
-  function buildDocxBytes(script){
-    const built=buildDocument(script),now=new Date().toISOString(),footerTitle=`《${built.title.replace(/^《|》$/g,'')}》`;
-    const document=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${built.body}<w:sectPr><w:footerReference w:type="default" r:id="rId1"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1247" w:right="1417" w:bottom="1247" w:left="1417" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  function buildDocxBytes(script,portraits=[]){
+    const portraitMap=new Map(portraits.map(item=>[String(item.nodeId),item])),media=[...new Map(portraits.map(item=>[item.relId,item])).values()],built=buildDocument(script,portraitMap),now=new Date().toISOString(),footerTitle=`《${built.title.replace(/^《|》$/g,'')}》`;
+    const document=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${built.body}<w:sectPr><w:footerReference w:type="default" r:id="rId1"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1247" w:right="1417" w:bottom="1247" w:left="1417" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
     const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Microsoft YaHei" w:hAnsi="Microsoft YaHei" w:eastAsia="微软雅黑"/><w:color w:val="888888"/><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>${xml(footerTitle)}</w:t></w:r></w:p></w:ftr>`;
+    const imageRelationships=media.map(item=>`<Relationship Id="${item.relId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${item.fileName}"/>`).join('');
     const entries=[
-      {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`},
+      {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`},
       {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`},
       {name:'word/document.xml',data:document},
       {name:'word/styles.xml',data:stylesXml()},
       {name:'word/footer1.xml',data:footer},
-      {name:'word/_rels/document.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+      {name:'word/_rels/document.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${imageRelationships}</Relationships>`},
       {name:'docProps/core.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xml(built.title)}</dc:title><dc:creator>山水有戏</dc:creator><cp:lastModifiedBy>山水有戏</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`},
-      {name:'docProps/app.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>山水有戏</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><Company></Company><LinksUpToDate>false</LinksUpToDate><SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>1.0</AppVersion></Properties>`}
+      {name:'docProps/app.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>山水有戏</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><Company></Company><LinksUpToDate>false</LinksUpToDate><SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>1.0</AppVersion></Properties>`},
+      ...media.map(item=>({name:`word/media/${item.fileName}`,data:item.data}))
     ];
     return createZip(entries);
   }
 
   function safeFileName(value){return(text(value)||'未命名剧本').replace(/[\\/:*?"<>|]/g,'_').replace(/[. ]+$/g,'').slice(0,80)}
 
-  function exportScript(script){
+  async function imageToJpeg(source){
+    const response=await fetch(new URL(source,document.baseURI),{cache:'force-cache'});
+    if(!response.ok)throw new Error(`人物画像加载失败：${source}`);
+    const blob=await response.blob(),bitmap=await createImageBitmap(blob),maxWidth=640,maxHeight=900,scale=Math.min(1,maxWidth/bitmap.width,maxHeight/bitmap.height),width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale)),canvas=document.createElement('canvas');
+    canvas.width=width;canvas.height=height;
+    const context=canvas.getContext('2d');context.fillStyle='#FFFFFF';context.fillRect(0,0,width,height);context.drawImage(bitmap,0,0,width,height);bitmap.close?.();
+    const jpeg=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('人物画像转换失败')),'image/jpeg',.88));
+    return{data:new Uint8Array(await jpeg.arrayBuffer()),width,height};
+  }
+
+  async function preparePortraits(script){
+    const portraits=[],bySource=new Map();
+    for(const node of script.plot_nodes||[]){
+      const npc=findNodeNpc(script,node),source=text(npc?.portrait_url||npc?.portrait_src||npc?.portrait);
+      if(!npc||!source)continue;
+      let image=bySource.get(source);
+      if(!image){
+        try{
+          const converted=await imageToJpeg(source),index=bySource.size+1,maxCx=2651760,maxCy=3749040,ratio=Math.min(maxCx/converted.width,maxCy/converted.height);
+          image={relId:`rId${index+2}`,fileName:`npc-${index}.jpg`,data:converted.data,cx:Math.round(converted.width*ratio),cy:Math.round(converted.height*ratio),docPrId:index+10,name:text(npc.name)||'剧情人物'};
+          bySource.set(source,image);
+        }catch(error){console.warn(error)}
+      }
+      if(image)portraits.push({...image,nodeId:node.node_id,docPrId:portraits.length+11});
+    }
+    return portraits;
+  }
+
+  async function exportScript(script){
     if(!script||!script.project)throw new Error('没有可导出的剧本内容');
-    const bytes=buildDocxBytes(script),blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    const portraits=await preparePortraits(script),bytes=buildDocxBytes(script,portraits),blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download=`${safeFileName(script.project.name)}_完整剧本.docx`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
   }
 
