@@ -1,12 +1,14 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-8';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-9';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-8',
-  './agent-config.js?v=cn-stable-8',
-  './docx-export.js?v=cn-stable-8',
-  './app.js?v=cn-stable-8',
-  './sample-script.json?v=cn-stable-8',
+  './styles.css?v=cn-stable-9',
+  './agent-config.js?v=cn-stable-9',
+  './docx-export.js?v=cn-stable-9',
+  './app.js?v=cn-stable-9',
+  './sample-script.json?v=cn-stable-9',
+  './assets/resources/nanxijiang-rag/manifest.json',
+  './assets/resources/楠溪江RAG资料.zip',
   './assets/maps/map-01.webp',
   './assets/maps/map-02.webp',
   './assets/maps/map-03.webp',
@@ -94,4 +96,3 @@ self.addEventListener('fetch',event=>{
   }
   if(/\.(?:webp|png|jpe?g|svg|ico)$/.test(url.pathname))event.respondWith(cacheFirst(request));
 });
-
