@@ -23,7 +23,7 @@ def _allowed_origins() -> list[str]:
     return [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
 
 
-app = FastAPI(title="文旅剧本游策划 Agent", version="8")
+app = FastAPI(title="文旅剧本游策划 Agent", version="9")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins(),
@@ -62,7 +62,7 @@ class ChatResponse(BaseModel):
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"service": "sanshuiyouxi-agent", "status": "ok", "version": "8"}
+    return {"service": "sanshuiyouxi-agent", "status": "ok", "version": "9"}
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -106,7 +106,7 @@ async def health() -> dict[str, Any]:
     )
     return {
         "status": "ok" if has_knowledge else "degraded",
-        "version": "8",
+        "version": "9",
         "knowledge": "ready" if has_knowledge else "missing",
         "provider_configured": has_provider_key,
     }

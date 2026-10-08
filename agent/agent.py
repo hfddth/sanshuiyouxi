@@ -111,26 +111,24 @@ UPSTREAM_MODULE_NAMES = {
 
 
 STAGE_PROGRESS = {
-    "ask_user":                     {"step": 0, "total": 5, "name": "选择景区", "status": "confirming"},
-    "stage1_confirm":               {"step": 1, "total": 5, "name": "IP 与世界观", "status": "confirming"},
-    "stage2_confirm":               {"step": 2, "total": 5, "name": "人物与故事梗概", "status": "confirming"},
-    "stage3_input_spaces":          {"step": 3, "total": 5, "name": "选择景点", "status": "confirming"},
-    "stage3_confirm":               {"step": 3, "total": 5, "name": "剧情结构与景点绑定", "status": "confirming"},
-    "stage4_confirm":               {"step": 4, "total": 5, "name": "剧情节点", "status": "confirming"},
-    "stage4_confirm_upstream":      {"step": 4, "total": 5, "name": "确认修改上游", "status": "confirming"},
-    "stage5_confirm":               {"step": 5, "total": 5, "name": "整体审查与最终输出", "status": "confirming"},
-    "finished":                     {"step": 5, "total": 5, "name": "策划案已完成", "status": "finished"},
+    "ask_user":                     {"step": 0, "total": 4, "name": "选择景区", "status": "confirming"},
+    "stage2_confirm":               {"step": 1, "total": 4, "name": "剧本基本信息", "status": "confirming"},
+    "stage3_input_spaces":          {"step": 2, "total": 4, "name": "选择景点", "status": "confirming"},
+    "stage3_confirm":               {"step": 2, "total": 4, "name": "剧情结构与景点绑定", "status": "confirming"},
+    "stage4_confirm":               {"step": 3, "total": 4, "name": "剧情节点", "status": "confirming"},
+    "stage4_confirm_upstream":      {"step": 3, "total": 4, "name": "确认修改上游", "status": "confirming"},
+    "stage5_confirm":               {"step": 4, "total": 4, "name": "整体审查与最终输出", "status": "confirming"},
+    "finished":                     {"step": 4, "total": 4, "name": "策划案已完成", "status": "finished"},
 }
 
 
 def get_progress(stage: str) -> dict:
-    return STAGE_PROGRESS.get(stage, {"step": 0, "total": 5, "name": "", "status": "confirming"})
+    return STAGE_PROGRESS.get(stage, {"step": 0, "total": 4, "name": "", "status": "confirming"})
 
 
 def get_next_hint(stage: str) -> str:
     hints = {
         "ask_user": "AI 思考中 · 正在识别景区名称，必要时联网核查...",
-        "stage1_confirm": "AI 思考中 · 正在调用剧本写作 Skill，构建 IP 与世界观框架...",
         "stage2_confirm": "AI 思考中 · 正在调用角色设计 Skill，生成人物与故事主线...",
         "stage3_input_spaces": "AI 思考中 · 正在解析景点语义，必要时联网核查景点归属...",
         "stage3_confirm": "AI 思考中 · 正在规划剧情结构，匹配真实空间与剧情节点...",
@@ -187,9 +185,8 @@ class ModifyTargetResult(BaseModel):
 
 
 def calc_total_nodes(space_count: int) -> int:
-    # 节点数与景点数相同（最少 3 个，最多 5 个）
-    return max(3, min(5, space_count))
-
+    # 节点数与景点数严格一一对应
+    return space_count
 
 def to_frontend_dict(script: Script) -> dict:
     """只导出前端可视化规范要求的 4 个核心对象。"""
@@ -401,7 +398,8 @@ def save_script(session_id: str, script: Script, suffix: str = ""):
 
 # ===== 格式化输出 =====
 
-def format_node_card(node: PlotNode, space_name: str, index: int, total: int, is_last: bool = False) -> str:
+def format_node_card(node: PlotNode, space_name: str, index: int, total: int,
+                     is_last: bool = False, dialogues: list = None) -> str:
     lines = []
     lines.append("━" * 30)
     lines.append(f"节点 {node.node_id}　({index}/{total})")
@@ -442,9 +440,19 @@ def format_node_card(node: PlotNode, space_name: str, index: int, total: int, is
                 lines.append(f"    融合：{c.integration}")
     if node.rewards:
         lines.append("")
-        lines.append("【奖励】")
+        lines.append("【剧情推进】")
         for r in node.rewards:
-            lines.append(f"  · {r.name}：{r.description}")
+            lines.append(f"  {r.description}")
+    lines.append("")
+    if dialogues:
+        lines.append("")
+        lines.append("【本节点台词】")
+        for d in dialogues:
+            npc_name = d.get("npc_name", "?")
+            lines.append(f"  〔{npc_name}〕")
+            for line in d.get("lines", []):
+                lines.append(f"    「{line}」")
+
     lines.append("")
     lines.append("【结语】")
     lines.append(f"  {node.closing_narration}")
@@ -464,6 +472,7 @@ def format_full_script(script: Script) -> str:
     lines.append(f"  {script.project.location} · 沉浸式剧本游策划案")
     lines.append("=" * 40)
 
+    # ===== 一、项目信息 =====
     lines.append("")
     lines.append("【一、项目信息】")
     lines.append(f"  景区：{script.project.location}")
@@ -471,25 +480,9 @@ def format_full_script(script: Script) -> str:
     lines.append(f"  时长：{script.project.duration}")
     lines.append(f"  建议人数：{script.project.players}")
 
+    # ===== 二、角色 =====
     lines.append("")
-    lines.append("【二、IP 定位】")
-    lines.append(f"  名称：{script.ip.name}")
-    lines.append(f"  概念：{script.ip.concept}")
-    lines.append(f"  定位：{script.ip.positioning}")
-    lines.append(f"  卖点：{script.ip.selling_point}")
-    lines.append(f"  目标游客：{script.ip.target_audience}")
-    lines.append(f"  视觉风格：{script.ip.visual_style}")
-
-    lines.append("")
-    lines.append("【三、世界观】")
-    lines.append(f"  时间背景：{script.world.time_setting}")
-    lines.append(f"  世界规则：{script.world.world_rules}")
-    lines.append(f"  核心冲突：{script.world.core_conflict}")
-    lines.append(f"  玩家身份：{script.world.player_identity}")
-    lines.append(f"  玩家目标：{script.world.player_goal}")
-
-    lines.append("")
-    lines.append("【四、角色】")
+    lines.append("【二、角色】")
     for c in script.characters:
         lines.append(f"  · {c.name}（{c.role}）")
         if c.personality:
@@ -497,13 +490,16 @@ def format_full_script(script: Script) -> str:
         if c.function:
             lines.append(f"    功能：{c.function}")
 
+    # ===== 三、故事梗概 =====
     lines.append("")
-    lines.append("【五、故事主线】")
+    lines.append("【三、故事梗概】")
     lines.append(f"  梗概：{script.story.synopsis}")
     if script.story.background:
         lines.append(f"  背景：{script.story.background}")
     if script.story.event:
         lines.append(f"  事件：{script.story.event}")
+    if script.story.player_intervention:
+        lines.append(f"  玩家介入：{script.story.player_intervention}")
     if script.story.conflict_escalation:
         lines.append(f"  冲突升级：{script.story.conflict_escalation}")
     if script.story.climax:
@@ -511,18 +507,10 @@ def format_full_script(script: Script) -> str:
     if script.story.ending:
         lines.append(f"  结局：{script.story.ending}")
 
-    lines.append("")
-    lines.append("【六、剧情结构】")
-    for act in script.plot_structure.acts:
-        act_name = act.get("act", "")
-        goal = act.get("goal", "")
-        lines.append(f"  {act_name}：{goal}")
-        for title in act.get("node_titles", []):
-            lines.append(f"    · {title}")
-
+    # ===== 四、剧情节点 =====
     lines.append("")
     lines.append("=" * 40)
-    lines.append("  七、剧情节点")
+    lines.append("  四、剧情节点")
     lines.append("=" * 40)
     for i, node in enumerate(script.plot_nodes, 1):
         space_name = ""
@@ -537,6 +525,8 @@ def format_full_script(script: Script) -> str:
         lines.append(f"  任务目标：{node.task.objective}")
         if node.task.player_actions:
             lines.append(f"  玩家动作：{'；'.join(node.task.player_actions)}")
+        if node.task.completion_condition:
+            lines.append(f"  完成条件：{node.task.completion_condition}")
         if node.interaction.type:
             lines.append(f"  互动类型：{node.interaction.type}")
         if node.clues:
@@ -544,23 +534,13 @@ def format_full_script(script: Script) -> str:
         if node.culture:
             lines.append(f"  文化依据：{'；'.join(c.name for c in node.culture)}")
         if node.rewards:
-            lines.append(f"  奖励：{'；'.join(r.name for r in node.rewards)}")
+            lines.append(f"  剧情推进：{'；'.join(r.description for r in node.rewards)}")
         lines.append(f"  结语：{node.closing_narration}")
 
+    # ===== 五、文化资源 =====
     lines.append("")
     lines.append("=" * 40)
-    lines.append("  八、NPC")
-    lines.append("=" * 40)
-    for n in script.npcs:
-        lines.append(f"  · {n.name}（{n.role}）")
-        if n.personality:
-            lines.append(f"    性格：{n.personality}")
-        if n.background:
-            lines.append(f"    背景：{n.background}")
-
-    lines.append("")
-    lines.append("=" * 40)
-    lines.append("  九、文化资源")
+    lines.append("  五、文化资源")
     lines.append("=" * 40)
     for c in script.culture_resources:
         lines.append(f"  · {c.name}（{c.authenticity}）")
@@ -572,7 +552,6 @@ def format_full_script(script: Script) -> str:
     lines.append("  策划案已完成")
     lines.append("=" * 40)
     return "\n".join(lines)
-
 
 # ===== 阶段 1：IP 与世界观 =====
 def run_stage1(state: AgentState, user_preference: str = "") -> str:
@@ -618,30 +597,48 @@ def run_stage2(state: AgentState, user_preference: str = "") -> str:
     script.characters = bundle.characters
     script.story = bundle.story
 
+    # 人物列表
     chars = "\n".join(
         f"· {c.name}（{c.role}）：{c.function}"
         for c in script.characters
     )
-    text = f"""【第二阶段：人物与故事梗概】
 
-主要角色：
+    # 故事简介：多段拼接
+    story_parts = []
+    if script.story.background:
+        story_parts.append(script.story.background)
+    if script.story.event:
+        story_parts.append(script.story.event)
+    if script.story.player_intervention:
+        story_parts.append(script.story.player_intervention)
+    if script.story.conflict_escalation:
+        story_parts.append(script.story.conflict_escalation)
+    if not story_parts and script.story.synopsis:
+        story_parts.append(script.story.synopsis)
+    story_text = "\n\n".join(story_parts)
+
+    # 故事类型：优先用 IP 定位/概念，简洁概括
+    story_type = script.ip.positioning or script.ip.concept or "沉浸式剧本游"
+
+    text = f"""【第一阶段：剧本基本信息】
+
+剧本名称：{script.ip.name}
+故事类型：{story_type}
+故事地点：{script.project.location}
+建议人数：{script.project.players}
+建议时长：{script.project.duration}
+玩家身份：{script.world.player_identity}
+
+故事简介：
+{story_text}
+
+人物：
 {chars}
-
-故事梗概：
-{script.story.synopsis}
-
-· 背景：{script.story.background}
-· 事件：{script.story.event}
-· 玩家介入：{script.story.player_intervention}
-· 冲突升级：{script.story.conflict_escalation}
-· 高潮：{script.story.climax}
-· 结局：{script.story.ending}
 
 ---
 回复「确认」进入下一步（选择景点），或告诉我想调整什么。"""
     state["stage"] = "stage2_confirm"
     return text
-
 def _classify_modify_intent(user_message: str, current_spaces: list) -> str:
     """
     在 stage3_confirm 阶段，判断用户的修改意图属于哪一类：
@@ -902,7 +899,7 @@ def _format_stage3_reply(state: AgentState, prefix: str = "") -> str:
     lines = []
 
     # 固定标题
-    lines.append("【第三阶段：选择景点】")
+    lines.append("【第二阶段：选择景点】")
     lines.append("")
 
     # 操作结果提示（如"已加入 2 个景点"）——放在标题下方
@@ -925,7 +922,8 @@ def _format_stage3_reply(state: AgentState, prefix: str = "") -> str:
     lines.append("")
     lines.append("您可以：")
     lines.append(
-        f"· 直接输入序号多选，序号间用逗号分隔（示例：1,3,5），"
+        f"· 直接输入序号多选，序号间用逗号分隔（示例：1,3,5）；"
+        f"也可在同一条输入里新增候选列表以外的景点（示例：1,桃花源,5），"
         f"建议选 {MIN_SPACES}-{MAX_SPACES} 个"
     )
     lines.append(f"· 说“你帮我选”自动挑 {MIN_SPACES}-{MAX_SPACES} 个")
@@ -981,23 +979,92 @@ def run_stage3_handle_input(state: AgentState, user_message: str) -> str:
             msg = "这些景点不在已选列表中。"
         return _format_stage3_reply(state, msg)
 
-    picked = _parse_space_picks(user_message, candidates)
 
-    if not picked:
-        new_name = _try_add_new_space(state, user_message)
-        if new_name == "rejected":
-            return _format_stage3_reply(
-                state,
-                f"「{user_message}」不属于「{script.project.location}」，暂不加入。",
-            )
-        elif new_name == "unknown":
-            return _format_stage3_reply(
-                state,
-                f"无法确认「{user_message}」是否属于该景区，请换个说法或从候选里选。",
-            )
-        else:
-            picked = [new_name]
+    # ===== 解析用户输入：按逗号拆分，混合识别序号和名称 =====
+    import re
+    normalized = user_message
+    for sep in ["，", "、", "和", "与", "及", "；", ";", " ", "\t"]:
+        normalized = normalized.replace(sep, ",")
 
+    picked = []      # 从候选里选中的
+    new_names = []   # 用户直接输入的新景点名（不联网，直接加入）
+
+    for token in normalized.split(","):
+        token = token.strip()
+        if not token:
+            continue
+
+        # 1. 纯数字 → 按序号取候选
+        if token.isdigit():
+            idx = int(token) - 1
+            if 0 <= idx < len(candidates):
+                name = candidates[idx].name
+                if name not in picked:
+                    picked.append(name)
+            continue
+
+        # 2. "第2个" / "景点3" 这类带数字的短句
+        m = re.search(r"\d+", token)
+        if m and len(token) <= 5:
+            idx = int(m.group()) - 1
+            if 0 <= idx < len(candidates):
+                name = candidates[idx].name
+                if name not in picked:
+                    picked.append(name)
+            continue
+
+        # 3. 中文数字（一、二、第一个…）
+        cn_matched = False
+        for ch in token:
+            if ch in _CN_NUM_MAP:
+                idx = _CN_NUM_MAP[ch] - 1
+                if 0 <= idx < len(candidates):
+                    name = candidates[idx].name
+                    if name not in picked:
+                        picked.append(name)
+                    cn_matched = True
+                break
+        if cn_matched:
+            continue
+
+        # 4. 精确匹配候选名
+        exact = None
+        for s in candidates:
+            if s.name == token:
+                exact = s.name
+                break
+        if exact:
+            if exact not in picked:
+                picked.append(exact)
+            continue
+
+        # 5. 其他 → 当新景点名（不联网，直接加入）
+        # 基本过滤：≥2 字，不含标点符号
+        if len(token) >= 2 and not any(c in token for c in "。！？；：\"'（）【】《》"):
+            if token not in new_names:
+                new_names.append(token)
+
+    # ===== 新景点直接加入候选池（不联网核查）=====
+    for name in new_names:
+        existing_names = {s.name for s in script.spaces}
+        if name not in existing_names:
+            new_space = Space(
+                space_id=f"S{len(script.spaces) + 1:02d}",
+                name=name,
+                type="",
+                description="",
+            )
+            script.spaces.append(new_space)
+
+            pool = state.get("all_candidate_spaces", [])
+            if not any(s.name == name for s in pool):
+                pool.append(new_space)
+            state["all_candidate_spaces"] = pool
+
+        if name not in picked:
+            picked.append(name)
+
+    # ===== 加入已选 =====
     added = 0
     for name in picked:
         if name not in selected:
@@ -1020,9 +1087,10 @@ def run_stage3_handle_input(state: AgentState, user_message: str) -> str:
 def run_stage3_generate(state: AgentState, selected_names: list, user_preference: str = "") -> str:
     script: Script = state["script"]
 
-    # 从完整候选池里挑出用户选中的
+    # 从完整候选池里挑出用户选中的，**按 selected_names 的顺序**
     pool = state.get("all_candidate_spaces") or script.spaces
-    selected = [s for s in pool if s.name in selected_names]
+    name_to_space = {s.name: s for s in pool}
+    selected = [name_to_space[n] for n in selected_names if n in name_to_space]
     if not selected:
         selected = pool[:5]
 
@@ -1098,10 +1166,30 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
         print(f"⚠️ LLM 返回的节点数超过 {total_nodes}，已截断")
 
     elif len(raw_titles) < total_nodes:
-        # 少了：以实际数量为准，同步 total_nodes
-        total_nodes = len(raw_titles)
-        state["total_nodes"] = total_nodes
-        print(f"⚠️ LLM 返回的节点数不足 {total_nodes}，已按实际数量对齐")
+        # 少了：强制补齐到 total_nodes，用景点名生成节点标题
+        print(f"⚠️ LLM 只返回 {len(raw_titles)} 个节点，强制补齐到 {total_nodes} 个")
+        while len(raw_titles) < total_nodes:
+            i = len(raw_titles)
+            space_name = selected[i].name if i < len(selected) else f"场景{i+1}"
+            title = f"{space_name}·探访"
+            raw_titles.append(title)
+
+            # 同步加到 space_bindings
+            plot_structure.space_bindings.append({
+                "node_title": title,
+                "space_name": space_name,
+                "reason": f"在{space_name}展开剧情节点。",
+            })
+            # 加到最后一个 act
+            if plot_structure.acts:
+                plot_structure.acts[-1].setdefault("node_titles", []).append(title)
+            else:
+                plot_structure.acts = [{
+                    "act": "第一幕",
+                    "goal": "",
+                    "node_titles": [title],
+                }]
+        script.plot_structure = plot_structure
 
     # 不再单独确认结构，stage 由调用者（生成第 1 个节点）设置
     state["planned_node_titles"] = raw_titles
@@ -1110,7 +1198,7 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
 
 
 # ===== 阶段 4：逐个生成节点 =====
-def run_stage4_next_node(state: AgentState, user_preference: str = "") -> str:
+def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_node_json: str = "") -> str:
     script: Script = state["script"]
     idx = state.get("current_node_index", 0)
     planned = state.get("planned_node_titles", [])
@@ -1121,14 +1209,20 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "") -> str:
     node_title = planned[idx]
 
     skill = Skill03c_SingleNode()
-    node = skill.run(
+    node, node_dialogues = skill.run(
         script,
         node_index=idx + 1,
         total_nodes=len(planned),
         node_title=node_title,
         previous_nodes=script.plot_nodes,
         user_preference=user_preference,
+        previous_node_json=previous_node_json,
     )
+
+    # 把本节点的台词存到 state（供节点卡片显示 + stage5 汇总）
+    if "node_dialogues" not in state:
+        state["node_dialogues"] = {}
+    state["node_dialogues"][node.node_id] = node_dialogues or []
 
     # 强制重写 clue_id，保证全局唯一（LLM 每个节点都从 C01 开始）
     for i, c in enumerate(node.clues, 1):
@@ -1148,7 +1242,8 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "") -> str:
             break
 
     is_last = (idx + 1 >= len(planned))
-    return format_node_card(node, space_name, idx + 1, len(planned), is_last=is_last)
+    return format_node_card(node, space_name, idx + 1, len(planned),
+                            is_last=is_last, dialogues=node_dialogues or [])
 
 # ===== 阶段 5：NPC + 审查 + 格式化完整策划案 =====
 def run_stage5_final(state: AgentState) -> str:
@@ -1171,12 +1266,37 @@ def run_stage5_final(state: AgentState) -> str:
     try:
         skill_npc = Skill03d_NPCs()
         script.npcs = skill_npc.run(script)
+
+        # 汇总 npc_dialogues：从 stage4 已生成的 state["node_dialogues"] 拿
+        from schema import NPCDialogue
+        all_dialogues = []
+        node_dialogues = state.get("node_dialogues", {})
+        for node_id in sorted(node_dialogues.keys()):
+            for d in node_dialogues[node_id]:
+                all_dialogues.append(NPCDialogue(
+                    node_id=node_id,
+                    npc_name=d.get("npc_name", ""),
+                    lines=d.get("lines", []),
+                ))
+        script.npc_dialogues = all_dialogues
+
+        # 把台词回填给 npcs（按 npc_name 匹配）
+        for npc in script.npcs:
+            npc_lines = []
+            for node_id in sorted(node_dialogues.keys()):
+                for d in node_dialogues[node_id]:
+                    if d.get("npc_name") == npc.name:
+                        npc_lines.append({
+                            "node_id": node_id,
+                            "lines": d.get("lines", []),
+                        })
+            from schema import NPCLine
+            npc.dialogues = [NPCLine(**x) for x in npc_lines]
     except Exception as e:
         print(f"❌ 阶段5 NPC 生成失败：{e}")
         # 不清空已有 NPC，可能是重试
         if not script.npcs:
             script.npcs = []
-
     # ===== 2. 六维审查 =====
     try:
         skill_audit = Skill04_Audit()
@@ -1365,6 +1485,7 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
             "force_confirm": False,
             "pending_upstream_modify": "",
             "pending_upstream_module": "",
+            "node_dialogues": {},
         }
         return make_response(greeting, None, "ask_user", "正在等待您输入景区名称...")
 
@@ -1424,38 +1545,26 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         state["script"].project.duration = "60分钟"
         state["script"].project.players = "2-4人"
         state["script"].project.summary = f"以{chosen}为舞台的沉浸式剧本游"
-        state["script"].project.cover = "assets/maps/map-01.webp"
+        state["script"].project.cover = "https://via.placeholder.com/800x450/3498db/ffffff?text=Script+Game"
 
         skill01 = Skill01_CultureAnalysis()
         state["script"].culture_resources = skill01.run(chosen, "沉浸式剧本游")
 
         is_local = chosen in spots
         if is_local:
-            prefix = f"好的，选择「{chosen}」。正在生成 IP 与世界观，请稍候...\n\n"
+            prefix = f"好的，选择「{chosen}」。正在生成剧本信息，请稍候...\n\n"
         else:
             prefix = (
                 f"好的，选择「{chosen}」。\n"
                 f"正在识别景区信息，永嘉专属资料正在进一步匹配与补充中……\n\n"
             )
 
-        reply = prefix + run_stage1(state)
-        state["messages"].append({"role": "user", "content": user_message})
-        state["messages"].append({"role": "assistant", "content": reply})
-        SESSIONS[session_id] = state
-        return make_response(reply, state["script"], state["stage"])
+        # 后台生成 IP 与世界观（不展示），只用来填充 script.ip / script.world
+        # 后续 stage2/3/4 的 prompt 依赖这些字段
+        run_stage1(state)
 
-    # 阶段 1 确认
-    # 阶段 1 确认
-    if stage == "stage1_confirm":
-        intent = judge_intent(user_message, "确认 IP 与世界观")
-        if intent == "confirm":
-            reply = "正在生成人物与故事梗概，请稍候...\n\n" + run_stage2(state)
-        elif intent in ("modify", "add", "remove"):
-            reply = "正在根据您的意见调整 IP 与世界观...\n\n" + run_stage1(state, user_preference=user_message)
-        elif intent == "cancel":  # ← 新增
-            reply = "当前阶段没有可取消的操作。请回复「确认」进入下一步，或告诉我您想怎么调整 IP 与世界观。"
-        else:
-            reply = "请回复「确认」进入下一步，或告诉我您想怎么调整 IP 与世界观。"
+        # 直接展示第二阶段
+        reply = prefix + run_stage2(state)
         state["messages"].append({"role": "user", "content": user_message})
         state["messages"].append({"role": "assistant", "content": reply})
         SESSIONS[session_id] = state
@@ -1614,9 +1723,16 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
             print(f"🔍 修改对象：{target}（{reason}）")
 
             if target == "current_node":
+                # 保存旧节点的完整 JSON，供 LLM 参考"保留大部分内容，只改用户指定的部分"
+                old_node = script.plot_nodes[-1] if script.plot_nodes else None
+                old_node_json = old_node.model_dump_json(indent=2) if old_node else ""
                 script.plot_nodes.pop()
-                reply = "正在根据您的意见调整当前节点...\n\n"
-                reply += run_stage4_next_node(state, user_preference=user_message)
+                reply = "正在根据您的意见调整当前节点（保留其他内容，只改您指定的部分）...\n\n"
+                reply += run_stage4_next_node(
+                    state,
+                    user_preference=user_message,
+                    previous_node_json=old_node_json,
+                )
             elif target.startswith("node:"):
                 target_node_id = target.split(":", 1)[1].strip()
 
@@ -1796,8 +1912,8 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         state["stage"] = "stage3_confirm"
         reply = "系统检测到状态异常，已自动恢复到剧情结构阶段。请回复「确认」开始生成剧情节点，或告诉我您的修改意见。"
     else:
-        state["stage"] = "stage1_confirm"
-        reply = "系统检测到状态异常，已自动恢复到 IP 与世界观阶段。请回复「确认」继续，或告诉我您的修改意见。"
+        state["stage"] = "stage2_confirm"
+        reply = "系统检测到状态异常，已自动恢复到剧本信息阶段。请回复「确认」继续，或告诉我您的修改意见。"
 
     state["messages"].append({"role": "user", "content": user_message})
     state["messages"].append({"role": "assistant", "content": reply})

@@ -159,6 +159,15 @@ class PlotNode(BaseModel):
             return []
         return v
 
+class NPCLine(BaseModel):
+    node_id: str = ""
+    lines: List[str] = Field(default_factory=list)
+
+
+class NPCDialogue(BaseModel):
+    node_id: str = ""
+    npc_name: str = ""
+    lines: List[str] = Field(default_factory=list)
 
 class NPC(BaseModel):
     npc_id: str
@@ -170,6 +179,7 @@ class NPC(BaseModel):
     appearance_mode: Literal["online", "offline", "both"] = "both"
     space_ids: List[str] = Field(default_factory=list)
     plot_node_ids: List[str] = Field(default_factory=list)
+    dialogues: List[NPCLine] = Field(default_factory=list)   # ← 新增
 
 
 class ReviewIssue(BaseModel):
@@ -202,3 +212,5 @@ class Script(BaseModel):
     plot_structure: PlotStructure = Field(default_factory=PlotStructure)
     culture_resources: List[CultureResource] = Field(default_factory=list)
     review: Review = Field(default_factory=Review)
+    # 第 8 个扩展字段（NPC 台词按节点汇总）
+    npc_dialogues: List[NPCDialogue] = Field(default_factory=list)

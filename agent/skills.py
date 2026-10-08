@@ -52,6 +52,7 @@ class PlotStructureBundle(BaseModel):
 
 class SingleNodeBundle(BaseModel):
     plot_node: PlotNode
+    node_dialogues: list[dict] = []
 
 
 class NPCList(BaseModel):
@@ -174,6 +175,8 @@ class Skill03b_PlotStructure:
         )
         return result.plot_structure
 
+
+
 class Skill03c_SingleNode:
     name = "单个剧情节点生成"
 
@@ -185,20 +188,26 @@ class Skill03c_SingleNode:
         node_title: str,
         previous_nodes: list[PlotNode],
         user_preference: str = "",
+        previous_node_json: str = "",
     ) -> PlotNode:
         space_text = json.dumps(
             [s.model_dump() for s in script.spaces], ensure_ascii=False
         )
-        # 【关键改动】不再把 resource_id 传给 LLM。
-        # 只传 name、authenticity、description、source（文字的来源），
-        # 让 LLM 在生成 plot_node.culture 的 source 字段时，
-        # 只能照抄 culture_resources 里已有的文字来源，不会误用 CR 编号。
         culture_text = "\n".join(
             f"- {c.name}（{c.authenticity}）\n"
             f"  内容：{c.description}\n"
             f"  来源：{c.source}"
             for c in script.culture_resources
         )
+
+        # 角色名单：让 LLM 台词只能从已有角色里选
+        characters_text = "\n".join(
+            f"- {c.name}（{c.role}）：{c.function}"
+            for c in script.characters
+        )
+        if not characters_text:
+            characters_text = "（暂无）"
+
         if previous_nodes:
             prev_summary = [
                 {
@@ -213,7 +222,10 @@ class Skill03c_SingleNode:
             prev_text = json.dumps(prev_summary, ensure_ascii=False, indent=2)
         else:
             prev_text = "（无，这是第一个节点）"
+
         pref = user_preference.strip() if user_preference else "（无）"
+        prev_node_text = previous_node_json if previous_node_json else "（无，这是首次生成）"
+
         prompt = STAGE4_SINGLE_NODE_PROMPT.format(
             node_index=node_index,
             total_nodes=total_nodes,
@@ -225,14 +237,19 @@ class Skill03c_SingleNode:
             is_last_node="是" if node_index == total_nodes else "否",
             spaces_text=space_text,
             culture_text=culture_text,
+            characters_text=characters_text,
             previous_nodes=prev_text,
             user_preference=pref,
+            previous_node_json=prev_node_text,
         )
         invoke = get_json_llm(SingleNodeBundle)
         result = invoke(
             [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=prompt)]
         )
-        return result.plot_node
+        return result.plot_node, result.node_dialogues
+
+
+
 
 
 class Skill03d_NPCs:
