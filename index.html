@@ -7,7 +7,7 @@
   <meta name="description" content="山水有戏 · 对话式文旅剧本创作智能体" />
   <title>山水有戏 · 对话式文旅剧本创作</title>
   <link rel="preload" href="assets/maps/map-01.webp" as="image" type="image/webp" fetchpriority="high" />
-  <link rel="stylesheet" href="styles.css?v=cn-stable-9" />
+  <link rel="stylesheet" href="styles.css?v=cn-stable-10" />
 </head>
 <body>
   <header class="topbar">
@@ -81,7 +81,7 @@
 
         <section class="panel-view" id="panel-resources">
           <header class="workspace-head compact-head resource-head">
-            <div><small>RESOURCE LIBRARY</small><h2>资源库</h2><p>为所有用户提供经过整理的常驻项目资料，支持分类浏览与整包下载。</p></div>
+            <div><small>RESOURCE LIBRARY</small><h2>资源库</h2><p>浏览网站常驻资料，也可以导入自己的本地资料夹。</p></div>
           </header>
           <section class="resource-folder-grid" id="resourceFolderGrid" aria-label="常驻项目资料">
             <button class="resource-folder-card" id="openPermanentResource" type="button" aria-label="打开楠溪江项目资源">
@@ -90,12 +90,21 @@
               <strong>楠溪江项目资源</strong>
               <small id="permanentResourceCount">20 项</small>
             </button>
+            <button class="resource-folder-card resource-import-card" id="importResourceFolder" type="button" aria-label="导入本地资料夹">
+              <span class="resource-import-plus" aria-hidden="true">＋</span>
+              <strong>导入资料夹</strong>
+              <small>保存在当前浏览器</small>
+            </button>
+            <input id="resourceFolderInput" type="file" webkitdirectory directory multiple hidden />
           </section>
           <section class="resource-project-view" id="resourceProjectView" hidden>
             <header class="resource-project-head">
-              <button type="button" id="closePermanentResource">← 返回资源库</button>
-              <div><small>PERMANENT RESOURCE</small><h3>楠溪江项目资源</h3><p>网站内置的楠溪江文旅剧本创作知识资料，所有用户均可访问。</p></div>
-              <a class="primary-btn" id="downloadPermanentResource" href="assets/resources/楠溪江RAG资料.zip" download>下载完整资料包</a>
+              <button type="button" id="closeResourceProject">← 返回资源库</button>
+              <div><small id="resourceProjectType">PERMANENT RESOURCE</small><h3 id="resourceProjectTitle">楠溪江项目资源</h3><p id="resourceProjectDescription">网站内置的楠溪江文旅剧本创作知识资料，所有用户均可访问。</p></div>
+              <div class="resource-project-actions">
+                <a class="primary-btn" id="downloadPermanentResource" href="assets/resources/楠溪江RAG资料.zip" download>下载完整资料包</a>
+                <button class="ghost-btn" id="deleteImportedResource" type="button" hidden>删除资料夹</button>
+              </div>
             </header>
             <div class="resource-category-grid" id="resourceCategoryGrid"></div>
           </section>
@@ -129,8 +138,8 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="agent-config.js?v=cn-stable-9"></script>
-  <script src="docx-export.js?v=cn-stable-9"></script>
-  <script src="app.js?v=cn-stable-9"></script>
+  <script src="agent-config.js?v=cn-stable-10"></script>
+  <script src="docx-export.js?v=cn-stable-10"></script>
+  <script src="app.js?v=cn-stable-10"></script>
 </body>
 </html>
