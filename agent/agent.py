@@ -1198,6 +1198,63 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
 
 
 # ===== 阶段 4：逐个生成节点 =====
+MAX_CHARACTER_NODE_USES = 2
+
+
+def _character_node_usage(state: AgentState, exclude_node_id: str = "") -> dict[str, int]:
+    """Count how many distinct nodes already use each character."""
+    usage: dict[str, int] = {}
+    for node_id, dialogues in state.get("node_dialogues", {}).items():
+        if node_id == exclude_node_id:
+            continue
+        names = {
+            str(item.get("npc_name", "")).strip()
+            for item in (dialogues or [])
+            if isinstance(item, dict) and str(item.get("npc_name", "")).strip()
+        }
+        for name in names:
+            usage[name] = usage.get(name, 0) + 1
+    return usage
+
+
+def _limit_node_dialogues(
+    state: AgentState,
+    node_id: str,
+    dialogues: list,
+    valid_names: set[str],
+) -> list[dict]:
+    """Keep valid unique characters whose two-node quota is not exhausted."""
+    usage = _character_node_usage(state, exclude_node_id=node_id)
+    accepted: list[dict] = []
+    seen: set[str] = set()
+    for item in dialogues or []:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("npc_name", "")).strip()
+        if not name or name not in valid_names or name in seen:
+            continue
+        if usage.get(name, 0) >= MAX_CHARACTER_NODE_USES:
+            continue
+        lines = [str(line).strip() for line in item.get("lines", []) if str(line).strip()]
+        accepted.append({"npc_name": name, "lines": lines[:4]})
+        seen.add(name)
+        usage[name] = usage.get(name, 0) + 1
+    return accepted
+
+
+def _sanitize_all_node_dialogues(state: AgentState, valid_names: set[str]) -> dict[str, list[dict]]:
+    """Rebuild dialogue assignments in node order and enforce the quota globally."""
+    original = state.get("node_dialogues", {})
+    normalized: dict[str, list[dict]] = {}
+    scratch = {"node_dialogues": normalized}
+    for node_id in sorted(original):
+        normalized[node_id] = _limit_node_dialogues(
+            scratch, node_id, original.get(node_id, []), valid_names
+        )
+    state["node_dialogues"] = normalized
+    return normalized
+
+
 def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_node_json: str = "") -> str:
     script: Script = state["script"]
     idx = state.get("current_node_index", 0)
@@ -1207,6 +1264,8 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
         return run_stage5_final(state)
 
     node_title = planned[idx]
+    expected_node_id = f"N{idx + 1:02d}"
+    character_usage = _character_node_usage(state, exclude_node_id=expected_node_id)
 
     skill = Skill03c_SingleNode()
     node, node_dialogues = skill.run(
@@ -1217,12 +1276,17 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
         previous_nodes=script.plot_nodes,
         user_preference=user_preference,
         previous_node_json=previous_node_json,
+        character_usage=character_usage,
     )
 
     # 把本节点的台词存到 state（供节点卡片显示 + stage5 汇总）
     if "node_dialogues" not in state:
         state["node_dialogues"] = {}
-    state["node_dialogues"][node.node_id] = node_dialogues or []
+    valid_character_names = {character.name for character in script.characters}
+    node_dialogues = _limit_node_dialogues(
+        state, node.node_id, node_dialogues or [], valid_character_names
+    )
+    state["node_dialogues"][node.node_id] = node_dialogues
 
     # 强制重写 clue_id，保证全局唯一（LLM 每个节点都从 C01 开始）
     for i, c in enumerate(node.clues, 1):
@@ -1267,10 +1331,31 @@ def run_stage5_final(state: AgentState) -> str:
         skill_npc = Skill03d_NPCs()
         script.npcs = skill_npc.run(script)
 
+        # 最终兜底：同名人物只保留一个条目，并且最多关联两个剧情节点。
+        valid_node_ids = {node.node_id for node in script.plot_nodes}
+        node_space = {node.node_id: node.space_id for node in script.plot_nodes}
+        valid_space_ids = {space.space_id for space in script.spaces}
+        unique_npcs = []
+        seen_npc_names = set()
+        for npc in script.npcs:
+            if npc.name in seen_npc_names:
+                continue
+            seen_npc_names.add(npc.name)
+            npc.plot_node_ids = list(dict.fromkeys(
+                node_id for node_id in npc.plot_node_ids if node_id in valid_node_ids
+            ))[:MAX_CHARACTER_NODE_USES]
+            linked_spaces = [node_space[node_id] for node_id in npc.plot_node_ids if node_space.get(node_id)]
+            npc.space_ids = list(dict.fromkeys(linked_spaces or (
+                space_id for space_id in npc.space_ids if space_id in valid_space_ids
+            )))[:MAX_CHARACTER_NODE_USES]
+            unique_npcs.append(npc)
+        script.npcs = unique_npcs
+
         # 汇总 npc_dialogues：从 stage4 已生成的 state["node_dialogues"] 拿
         from schema import NPCDialogue
         all_dialogues = []
-        node_dialogues = state.get("node_dialogues", {})
+        valid_character_names = {character.name for character in script.characters}
+        node_dialogues = _sanitize_all_node_dialogues(state, valid_character_names)
         for node_id in sorted(node_dialogues.keys()):
             for d in node_dialogues[node_id]:
                 all_dialogues.append(NPCDialogue(

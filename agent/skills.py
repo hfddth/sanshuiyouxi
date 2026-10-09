@@ -189,7 +189,8 @@ class Skill03c_SingleNode:
         previous_nodes: list[PlotNode],
         user_preference: str = "",
         previous_node_json: str = "",
-    ) -> PlotNode:
+        character_usage: dict[str, int] | None = None,
+    ) -> tuple[PlotNode, list[dict]]:
         space_text = json.dumps(
             [s.model_dump() for s in script.spaces], ensure_ascii=False
         )
@@ -200,13 +201,15 @@ class Skill03c_SingleNode:
             for c in script.culture_resources
         )
 
-        # 角色名单：让 LLM 台词只能从已有角色里选
+        # 角色名单：每个人物最多在两个剧情节点中出场。
+        usage = character_usage or {}
         characters_text = "\n".join(
-            f"- {c.name}（{c.role}）：{c.function}"
+            f"- {c.name}（{c.role}）：{c.function}；已使用 {usage.get(c.name, 0)}/2 次"
             for c in script.characters
+            if usage.get(c.name, 0) < 2
         )
         if not characters_text:
-            characters_text = "（暂无）"
+            characters_text = "（没有剩余可用人物；本节点 node_dialogues 必须输出空列表）"
 
         if previous_nodes:
             prev_summary = [
