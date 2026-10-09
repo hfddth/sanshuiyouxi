@@ -1,12 +1,12 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-12';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-13';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-12',
-  './agent-config.js?v=cn-stable-12',
-  './docx-export.js?v=cn-stable-12',
-  './app.js?v=cn-stable-12',
-  './sample-script.json?v=cn-stable-12',
+  './styles.css?v=cn-stable-13',
+  './agent-config.js?v=cn-stable-13',
+  './docx-export.js?v=cn-stable-13',
+  './app.js?v=cn-stable-13',
+  './sample-script.json?v=cn-stable-13',
   './assets/resources/nanxijiang-rag/manifest.json',
   './assets/resources/楠溪江RAG资料.zip',
   './assets/maps/map-01.webp',
