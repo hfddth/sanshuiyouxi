@@ -110,6 +110,35 @@
       ||null;
   }
 
+  function dialogueLines(value){
+    const values=Array.isArray(value)?value:[value];
+    return values.map(item=>text(item)).filter(Boolean);
+  }
+
+  function findNodeDialogues(script,node){
+    const nodeId=String(node.node_id||''),dialogues=[],seen=new Set();
+    const add=(npcName,lines)=>{
+      const cleanLines=dialogueLines(lines),name=text(npcName)||'剧情人物';
+      if(!cleanLines.length)return;
+      const key=`${name}\u0000${cleanLines.join('\u0000')}`;
+      if(seen.has(key))return;
+      seen.add(key);
+      dialogues.push({npc_name:name,lines:cleanLines});
+    };
+    for(const item of script.npc_dialogues||[]){
+      if(String(item.node_id||'')===nodeId)add(item.npc_name||item.name,item.lines||item.dialogues);
+    }
+    const mapped=script.node_dialogues&&!Array.isArray(script.node_dialogues)?script.node_dialogues[nodeId]:null;
+    for(const item of mapped||[])add(item.npc_name||item.name,item.lines||item.dialogues);
+    for(const item of node.node_dialogues||node.dialogues||[])add(item.npc_name||item.name,item.lines||item.dialogues);
+    for(const npc of script.npcs||[]){
+      for(const item of npc.dialogues||[]){
+        if(String(item.node_id||'')===nodeId)add(npc.name,item.lines||item.dialogues);
+      }
+    }
+    return dialogues;
+  }
+
   function imageParagraph(image){
     if(!image)return'';
     const name=xml(image.name||'剧情人物');
@@ -117,7 +146,7 @@
   }
 
   function nodeSection(script,node,index,portraitMap){
-    const space=findSpace(script,node),task=node.task||{},scene=node.scene||{},interaction=node.interaction||{},parts=[];
+    const space=findSpace(script,node),task=node.task||{},scene=node.scene||{},interaction=node.interaction||{},dialogues=findNodeDialogues(script,node),parts=[];
     parts.push(heading(`第${chineseNumber(index+1)}章｜${text(node.title)||`剧情节点 ${index+1}`}`,1));
     if(text(space.name)||text(space.description)){
       parts.push(heading('空间',2));
@@ -131,6 +160,13 @@
     }
     if(text(scene.description)||text(scene.plot)){
       parts.push(heading('场景与剧情',2),labeled('场景',scene.description),labeled('剧情',scene.plot));
+    }
+    if(dialogues.length){
+      parts.push(heading('NPC台词',2));
+      for(const dialogue of dialogues){
+        parts.push(body(`〔${dialogue.npc_name}〕`));
+        for(const line of dialogue.lines)parts.push(quote(`“${line.replace(/^[“\"]|[”\"]$/g,'')}”`));
+      }
     }
     if(text(task.title)||text(task.objective)){
       parts.push(heading('任务目标',2),body(task.title),body(task.objective));
@@ -162,23 +198,6 @@
     return parts.filter(Boolean).join('');
   }
 
-  function npcSection(script,sectionNumber){
-    const npcs=script.npcs||[];
-    if(!npcs.length)return'';
-    const parts=[heading(`${chineseNumber(sectionNumber)}、人物角色`,1)];
-    for(const npc of npcs){
-      parts.push(heading(text(npc.name)||'剧情人物',2));
-      parts.push(labeled('角色定位',npc.role||npc.function));
-      parts.push(labeled('出场方式',npc.appearance_mode==='online'?'数字人':npc.appearance_mode==='offline'?'线下 NPC':npc.appearance_mode==='both'?'线上与线下':'剧情互动'));
-      parts.push(labeled('性格',npc.personality));
-      parts.push(labeled('背景',npc.background));
-      parts.push(labeled('形象',npc.appearance));
-      parts.push(labeled('关联空间',npc.space_ids));
-      parts.push(labeled('关联节点',npc.plot_node_ids));
-    }
-    return parts.filter(Boolean).join('');
-  }
-
   function flowSection(script,sectionNumber){
     const nodes=script.plot_nodes||[];
     if(!nodes.length)return'';
@@ -192,53 +211,36 @@
   }
 
   function introductionSection(script){
-    const project=script.project||{},ip=script.ip||{},world=script.world||{},story=script.story||{},nodes=script.plot_nodes||[],firstNode=nodes[0]||{},lastNode=nodes[nodes.length-1]||{},firstScene=firstNode.scene||{},firstTask=firstNode.task||{},lastTask=lastNode.task||{},parts=[];
+    const project=script.project||{},world=script.world||{},story=script.story||{},nodes=script.plot_nodes||[],firstNode=nodes[0]||{},lastNode=nodes[nodes.length-1]||{},firstScene=firstNode.scene||{},firstTask=firstNode.task||{},lastTask=lastNode.task||{},parts=[];
     const synopsis=firstText(story.synopsis,project.synopsis,project.summary,firstScene.plot);
     const background=firstText(story.background,project.background,world.time_setting);
     const event=firstText(story.event,project.event,[text(firstNode.opening_narration),text(firstScene.plot)].filter(Boolean).join(' '));
     const intervention=firstText(story.player_intervention,project.player_intervention,firstTask.objective);
     const playerGoal=firstText(story.player_goal,world.player_goal,project.player_goal,lastTask.objective);
-    const worldSetting=firstText(world.time_setting,project.worldview);
-    const worldRules=firstText(world.world_rules,project.world_rules);
     const coreConflict=firstText(story.core_conflict,world.core_conflict,project.core_conflict);
-    const finalGoal=firstText(world.final_goal,story.final_goal,project.final_goal,lastTask.completion_condition);
-    const cultureRelation=firstText(world.culture_relation,story.culture_relation,project.culture_relation);
+    const introduction=[synopsis,background,event,intervention,coreConflict].map(value=>text(value)).filter((value,index,items)=>value&&items.indexOf(value)===index);
 
-    parts.push(heading('二、故事简介',1));
-    if(synopsis)parts.push(heading('故事梗概',2),body(synopsis));
-    if(background)parts.push(heading('背景设定',2),body(background));
-    if(event)parts.push(heading('事件起因',2),body(event));
-    if(intervention)parts.push(heading('玩家介入',2),body(intervention));
-    if(playerGoal)parts.push(heading('玩家目标',2),body(playerGoal));
-    if(text(story.conflict_escalation))parts.push(heading('冲突升级',2),body(story.conflict_escalation));
-    if(text(story.info_reveal))parts.push(heading('真相揭示',2),body(story.info_reveal));
-    if(text(story.climax))parts.push(heading('剧情高潮',2),body(story.climax));
-    if(text(story.ending))parts.push(heading('故事结局',2),body(story.ending));
+    parts.push(heading('故事简介',2));
+    for(const item of introduction)parts.push(body(item));
+    parts.push(heading('玩家目标',2),body(playerGoal||lastTask.completion_condition||'完成各章节任务并推动故事抵达结局。'));
+    return parts.filter(Boolean).join('');
+  }
 
-    const ipItems=[
-      ['IP 名称',ip.name],['核心概念',ip.concept],['项目定位',ip.positioning],['核心卖点',ip.selling_point],
-      ['目标客群',ip.target_audience],['情绪价值',ip.emotional_value],['视觉风格',ip.visual_style]
-    ].filter(([,value])=>text(value));
-    if(ipItems.length){
-      parts.push(heading('三、IP定位',1));
-      for(const [label,value] of ipItems)parts.push(labeled(label,value));
+  function finalRewardSection(script,sectionNumber){
+    const nodes=script.plot_nodes||[],lastNode=nodes[nodes.length-1]||{},rewards=lastNode.rewards||[];
+    if(!rewards.length)return'';
+    const parts=[heading(`${chineseNumber(sectionNumber)}、最终奖励`,1)];
+    for(const reward of rewards){
+      if(text(reward.name))parts.push(heading(text(reward.name),2));
+      if(text(reward.description))parts.push(body(reward.description));
     }
-
-    const worldItems=[
-      ['时空背景',worldSetting],['世界规则',worldRules],['核心冲突',coreConflict],
-      ['玩家身份',firstText(world.player_identity,project.player_identity,project.player_role,project.identity)],
-      ['最终目标',finalGoal],['文化与剧情关系',cultureRelation]
-    ].filter(([,value])=>text(value));
-    if(worldItems.length){
-      parts.push(heading(`${ipItems.length?'四':'三'}、世界观与体验目标`,1));
-      for(const [label,value] of worldItems)parts.push(labeled(label,value));
-    }
-    return{xml:parts.filter(Boolean).join(''),sectionCount:2+(ipItems.length?1:0)+(worldItems.length?1:0)};
+    return parts.filter(Boolean).join('');
   }
 
   function buildDocument(script,portraitMap=new Map(),mapImage=null){
     const project=script.project||{},name=text(project.name)||'未命名剧本',location=text(project.location)||text(project.scenic),type=text(project.type)||'沉浸式剧本游',players=text(project.players)||'建议人数待定',duration=text(project.duration)||'建议时长待定',identity=text(project.player_identity||project.player_role||project.identity)||'故事参与者',parts=[];
     parts.push(paragraph(`《${name.replace(/^《|》$/g,'')}》`,'Title',{align:'center'}));
+    parts.push(paragraph('完整剧本汇总','CoverMeta',{align:'center'}));
     parts.push(paragraph(''),paragraph(''));
     parts.push(paragraph([location,type].filter(Boolean).join(' · '),'CoverMeta',{align:'center'}));
     parts.push(paragraph(''),paragraph(''));
@@ -250,12 +252,11 @@
     parts.push(paragraph('一、剧本基本信息','Heading1',{keepNext:true,pageBreak:true}));
     parts.push(labeled('剧本名称',`《${name.replace(/^《|》$/g,'')}》`));
     parts.push(labeled('故事类型',type),labeled('故事地点',location),labeled('建议人数',players),labeled('建议时长',duration),labeled('玩家身份',identity));
-    const introduction=introductionSection(script);
-    parts.push(introduction.xml);
+    parts.push(introductionSection(script));
     if(mapImage)parts.push(heading('剧情地图',2),imageParagraph(mapImage));
     (script.plot_nodes||[]).forEach((node,index)=>parts.push(nodeSection(script,node,index,portraitMap)));
-    const base=introduction.sectionCount+1+(script.plot_nodes||[]).length;
-    parts.push(npcSection(script,base),flowSection(script,base+((script.npcs||[]).length?1:0)));
+    const rewardSectionNumber=(script.plot_nodes||[]).length+1,rewards=finalRewardSection(script,rewardSectionNumber);
+    parts.push(rewards,flowSection(script,rewardSectionNumber+(rewards?1:0)));
     return{body:parts.filter(Boolean).join(''),title:name};
   }
 
@@ -330,4 +331,3 @@
 
   global.ScriptDocxExporter={buildDocxBytes,exportScript,safeFileName};
 })(typeof window!=='undefined'?window:globalThis);
-
