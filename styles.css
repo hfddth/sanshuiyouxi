@@ -193,3 +193,18 @@
 .resource-category-card li small{font-size:9px;color:#839088;white-space:nowrap}
 @media(max-width:900px){.resource-category-grid{grid-template-columns:1fr}.resource-project-head{grid-template-columns:1fr}.resource-project-actions{justify-self:start}.resource-folder-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
 @media(max-width:600px){.resource-folder-grid{grid-template-columns:1fr 1fr;gap:12px}.resource-folder-card{min-height:175px;padding:20px 12px}.folder-art{width:78px;height:57px}.resource-folder-card strong{font-size:15px}.resource-category-card li a{grid-template-columns:26px minmax(0,1fr)}.resource-category-card li small{display:none}.mobile-nav{justify-content:space-evenly}}
+
+/* Progressive final review */
+.audit-message .bubble{max-width:92%}
+.audit-stream{display:grid;gap:10px}
+.audit-line{display:block;line-height:1.75}
+.audit-line:first-child{font-weight:700;color:#315e52}
+.audit-line.entering{animation:audit-line-in .32s ease both}
+@keyframes audit-line-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Dialogue excerpts on character cards */
+.npc-dialogues{margin-top:16px;padding-top:14px;border-top:1px solid #e2e4de}
+.npc-dialogues h4{margin:0 0 10px;font:600 14px var(--serif);color:#315e52}
+.npc-dialogue-group{margin:10px 0}
+.npc-dialogue-group>b{display:block;margin-bottom:6px;font-size:11px;color:#668075}
+.npc-dialogue-group blockquote{margin:5px 0;padding-left:10px;border-left:2px solid #b7c8bf;color:#59645e;font-size:11px;line-height:1.7}

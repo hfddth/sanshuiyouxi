@@ -1313,18 +1313,19 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
 def run_stage5_final(state: AgentState) -> str:
     script: Script = state["script"]
 
-    audit_intro = """【第五阶段：整体审查与最终输出】
-
-正在执行六维审查协议，请您稍候：
-
-① 正在审查剧情整体逻辑性——检查节点之间的因果关系是否连贯，前后情节能否顺畅衔接；
-② 正在审查线索的连贯性——检查每一条线索的发现、推理、指向是否前后勾连，玩家能否通过线索自然推导出下一步；
-③ 正在审查任务的可执行性——检查每个任务的目标是否明确、玩家动作是否可操作、完成条件是否可判定；
-④ 正在审查空间与剧情的匹配度——检查剧情节点是否真实落在所选景点上，同一空间的多个节点是否有区域或时段区分；
-⑤ 正在审查文化元素的融合度——检查永嘉本地文化（谢灵运诗、永昆、道情、耕读文化等）是否真正进入玩法，而非简单堆砌；
-⑥ 正在审查整体实施可行性——检查互动类型是否合理、技术手段是否必要、NPC 与道具是否具备落地条件。
-
-"""
+    audit_lines = [
+        "【第五阶段：整体审查与最终输出】",
+        "正在执行六维审查协议，请您稍候：",
+        "① 正在审查剧情整体逻辑性——检查节点之间的因果关系是否连贯，前后情节能否顺畅衔接；",
+        "② 正在审查线索的连贯性——检查每一条线索的发现、推理、指向是否前后勾连，玩家能否通过线索自然推导出下一步；",
+        "③ 正在审查任务的可执行性——检查每个任务的目标是否明确、玩家动作是否可操作、完成条件是否可判定；",
+        "④ 正在审查空间与剧情的匹配度——检查剧情节点是否真实落在所选景点上，同一空间的多个节点是否有区域或时段区分；",
+        "⑤ 正在审查文化元素的融合度——检查永嘉本地文化是否真正进入玩法，而非简单堆砌；",
+        "⑥ 正在审查整体实施可行性——检查互动类型是否合理、技术手段是否必要、NPC 与道具是否具备落地条件。",
+        "审查完成，正在生成最终策划案...",
+    ]
+    state["stage5_audit_lines"] = audit_lines
+    audit_intro = "\n\n".join(audit_lines[:2]) + "\n\n" + "\n".join(audit_lines[2:-1]) + "\n\n"
 
     # ===== 1. 生成 NPC =====
     try:
@@ -1539,7 +1540,7 @@ def chat(session_id: str, user_message: str) -> dict:
 
         if session_id in SESSIONS:
             state = SESSIONS[session_id]
-            resp["stage5_audit_lines"] = state.get("stage5_audit_lines", [])
+            resp["stage5_audit_lines"] = state.pop("stage5_audit_lines", [])
 
             # 特判：stage4_confirm 且已是最后一个节点，换 next_hint
             if resp.get("stage") == "stage4_confirm":
