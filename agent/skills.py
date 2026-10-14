@@ -73,8 +73,8 @@ class ModifyPlan(BaseModel):
 class Skill01_CultureAnalysis:
     name = "文化资源分析"
 
-    def run(self, location: str, script_type: str) -> list[CultureResource]:
-        context = retrieve_multi_dimension(location, script_type)
+    def run(self, location: str, script_type: str, use_local: bool = True) -> list[CultureResource]:
+        context = retrieve_multi_dimension(location, script_type, use_local=use_local)
         prompt = f"""你正在为景区「{location}」分析可用于剧本游的文化资源。
 
 从知识库检索到的资料：
@@ -137,8 +137,8 @@ class Skill02b_CharactersAndStory:
 class Skill03a_ListSpaces:
     name = "候选景点检索"
 
-    def run(self, script: Script) -> list[Space]:
-        context = retrieve_multi_dimension(script.project.location, "空间")
+    def run(self, script: Script, use_local: bool = True) -> list[Space]:
+        context = retrieve_multi_dimension(script.project.location, "空间", use_local=use_local)
         prompt = STAGE3_SPACES_PROMPT.format(
             location=script.project.location,
             ip_concept=script.ip.concept,
@@ -189,8 +189,7 @@ class Skill03c_SingleNode:
         previous_nodes: list[PlotNode],
         user_preference: str = "",
         previous_node_json: str = "",
-        character_usage: dict[str, int] | None = None,
-    ) -> tuple[PlotNode, list[dict]]:
+    ) -> PlotNode:
         space_text = json.dumps(
             [s.model_dump() for s in script.spaces], ensure_ascii=False
         )
@@ -201,15 +200,13 @@ class Skill03c_SingleNode:
             for c in script.culture_resources
         )
 
-        # 角色名单：每个人物最多在两个剧情节点中出场。
-        usage = character_usage or {}
+        # 角色名单：让 LLM 台词只能从已有角色里选
         characters_text = "\n".join(
-            f"- {c.name}（{c.role}）：{c.function}；已使用 {usage.get(c.name, 0)}/2 次"
+            f"- {c.name}（{c.role}）：{c.function}"
             for c in script.characters
-            if usage.get(c.name, 0) < 2
         )
         if not characters_text:
-            characters_text = "（没有剩余可用人物；本节点 node_dialogues 必须输出空列表）"
+            characters_text = "（暂无）"
 
         if previous_nodes:
             prev_summary = [
@@ -347,7 +344,7 @@ class Skill04_Audit:
 2. 剧情逻辑（plot_structure_acts 的 node_titles 是否与 plot_nodes 的 title 一一对应）
 3. 游戏可玩性（project.players 与任务是否匹配，任务是否可完成）
 4. 空间可行性（每个节点的 space_id 是否在 spaces 中，节点是否分布在不同空间，动线是否重复）
-5. 文化真实性（plot_nodes 的 culture_sources 是否为文字来源，不是 CR 编号）
+5. 文化真实性（plot_nodes 的 culture_sources 是否为文字来源，不是 CR 编号；culture 内容必须与项目所在地相关，不得套用无关地域的文化素材）
 6. 实施可行性
 
 要求：

@@ -68,11 +68,6 @@ def _get_session_lock(session_id: str) -> threading.Lock:
 _SPOT_VERIFY_CACHE: dict[str, tuple] = {}
 
 
-NANXIJIANG_INTRO = (
-    "楠溪江不只是一个景点，它是国家级风景名胜区、国家 4A 级旅游区，"
-    "目前正在全力创建国家 5A 级旅游景区。"
-    "它包含多个古村落和自然景区，每个都可以单独做剧本游策划。"
-)
 
 MIN_SPACES = 3
 MAX_SPACES = 5
@@ -345,7 +340,7 @@ def clear_downstream(script: Script, module: str):
 
 def make_greeting() -> str:
     return (
-        "您好！我是永嘉文旅剧本游策划助手，专门为永嘉景区提供沉浸式剧本游策划服务。\n\n"
+        "您好！我是文旅剧本游策划助手，为景区提供沉浸式剧本游策划服务。\n\n"
         "我们分工协作：我负责整理素材、搭建剧本框架、设计故事与玩法并迭代优化；您来把控方向、敲定方案。\n\n"
         "现在，请告诉我您想策划的景区名称，我就可以开始构思方案。"
     )
@@ -356,12 +351,13 @@ def make_spot_list_reply(spots: list, prefix: str = "") -> str:
     if prefix:
         lines.append(prefix)
         lines.append("")
-    lines.append("可选景区如下：")
+    lines.append("【本地知识库已收录的景区】")
     lines.append("")
     for i, s in enumerate(spots, 1):
         lines.append(f"{i}. {s}")
     lines.append("")
-    lines.append("回复序号或直接输入景区名。")
+    lines.append("回复序号选择以上景区，或直接输入任意景区全名（如「北京故宫」「西湖」）。")
+    lines.append("如果该景区不在本地知识库中，我会联网核实并补充资料。")
     return "\n".join(lines)
 
 
@@ -687,7 +683,9 @@ def run_stage3_prompt(state: AgentState, keep_selected: bool = False) -> str:
     # 解耦。这样用户说"改"重新选景点时，候选池不会丢。
     candidate_pool = state.get("all_candidate_spaces")
     if not candidate_pool:
-        context = retrieve_multi_dimension(script.project.location, "空间")
+        # 非本地景区走联网，本地景区走本地库
+        use_local = script.project.location in list_available_spots()
+        context = retrieve_multi_dimension(script.project.location, "空间", use_local=use_local)
         prompt = f"""为剧本「{script.project.name}」提取候选景点。
 
 知识库资料：
@@ -846,7 +844,7 @@ def _try_add_new_space(state: AgentState, user_message: str) -> str:
         return msg
 
     try:
-        web_info = deepseek_web_search(f"永嘉县 {location} {user_message} 景点")
+        web_info = deepseek_web_search(f"{location} {user_message} 景点 简介")
     except Exception as e:
         print(f"⚠️ 联网搜索失败：{e}")
         web_info = ""
@@ -1198,63 +1196,6 @@ def run_stage3_generate(state: AgentState, selected_names: list, user_preference
 
 
 # ===== 阶段 4：逐个生成节点 =====
-MAX_CHARACTER_NODE_USES = 2
-
-
-def _character_node_usage(state: AgentState, exclude_node_id: str = "") -> dict[str, int]:
-    """Count how many distinct nodes already use each character."""
-    usage: dict[str, int] = {}
-    for node_id, dialogues in state.get("node_dialogues", {}).items():
-        if node_id == exclude_node_id:
-            continue
-        names = {
-            str(item.get("npc_name", "")).strip()
-            for item in (dialogues or [])
-            if isinstance(item, dict) and str(item.get("npc_name", "")).strip()
-        }
-        for name in names:
-            usage[name] = usage.get(name, 0) + 1
-    return usage
-
-
-def _limit_node_dialogues(
-    state: AgentState,
-    node_id: str,
-    dialogues: list,
-    valid_names: set[str],
-) -> list[dict]:
-    """Keep valid unique characters whose two-node quota is not exhausted."""
-    usage = _character_node_usage(state, exclude_node_id=node_id)
-    accepted: list[dict] = []
-    seen: set[str] = set()
-    for item in dialogues or []:
-        if not isinstance(item, dict):
-            continue
-        name = str(item.get("npc_name", "")).strip()
-        if not name or name not in valid_names or name in seen:
-            continue
-        if usage.get(name, 0) >= MAX_CHARACTER_NODE_USES:
-            continue
-        lines = [str(line).strip() for line in item.get("lines", []) if str(line).strip()]
-        accepted.append({"npc_name": name, "lines": lines[:4]})
-        seen.add(name)
-        usage[name] = usage.get(name, 0) + 1
-    return accepted
-
-
-def _sanitize_all_node_dialogues(state: AgentState, valid_names: set[str]) -> dict[str, list[dict]]:
-    """Rebuild dialogue assignments in node order and enforce the quota globally."""
-    original = state.get("node_dialogues", {})
-    normalized: dict[str, list[dict]] = {}
-    scratch = {"node_dialogues": normalized}
-    for node_id in sorted(original):
-        normalized[node_id] = _limit_node_dialogues(
-            scratch, node_id, original.get(node_id, []), valid_names
-        )
-    state["node_dialogues"] = normalized
-    return normalized
-
-
 def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_node_json: str = "") -> str:
     script: Script = state["script"]
     idx = state.get("current_node_index", 0)
@@ -1264,8 +1205,6 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
         return run_stage5_final(state)
 
     node_title = planned[idx]
-    expected_node_id = f"N{idx + 1:02d}"
-    character_usage = _character_node_usage(state, exclude_node_id=expected_node_id)
 
     skill = Skill03c_SingleNode()
     node, node_dialogues = skill.run(
@@ -1276,17 +1215,12 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
         previous_nodes=script.plot_nodes,
         user_preference=user_preference,
         previous_node_json=previous_node_json,
-        character_usage=character_usage,
     )
 
     # 把本节点的台词存到 state（供节点卡片显示 + stage5 汇总）
     if "node_dialogues" not in state:
         state["node_dialogues"] = {}
-    valid_character_names = {character.name for character in script.characters}
-    node_dialogues = _limit_node_dialogues(
-        state, node.node_id, node_dialogues or [], valid_character_names
-    )
-    state["node_dialogues"][node.node_id] = node_dialogues
+    state["node_dialogues"][node.node_id] = node_dialogues or []
 
     # 强制重写 clue_id，保证全局唯一（LLM 每个节点都从 C01 开始）
     for i, c in enumerate(node.clues, 1):
@@ -1313,50 +1247,28 @@ def run_stage4_next_node(state: AgentState, user_preference: str = "", previous_
 def run_stage5_final(state: AgentState) -> str:
     script: Script = state["script"]
 
-    audit_lines = [
-        "【第五阶段：整体审查与最终输出】",
-        "正在执行六维审查协议，请您稍候：",
-        "① 正在审查剧情整体逻辑性——检查节点之间的因果关系是否连贯，前后情节能否顺畅衔接；",
-        "② 正在审查线索的连贯性——检查每一条线索的发现、推理、指向是否前后勾连，玩家能否通过线索自然推导出下一步；",
-        "③ 正在审查任务的可执行性——检查每个任务的目标是否明确、玩家动作是否可操作、完成条件是否可判定；",
-        "④ 正在审查空间与剧情的匹配度——检查剧情节点是否真实落在所选景点上，同一空间的多个节点是否有区域或时段区分；",
-        "⑤ 正在审查文化元素的融合度——检查永嘉本地文化是否真正进入玩法，而非简单堆砌；",
-        "⑥ 正在审查整体实施可行性——检查互动类型是否合理、技术手段是否必要、NPC 与道具是否具备落地条件。",
-        "审查完成，正在生成最终策划案...",
-    ]
-    state["stage5_audit_lines"] = audit_lines
-    audit_intro = "\n\n".join(audit_lines[:2]) + "\n\n" + "\n".join(audit_lines[2:-1]) + "\n\n"
+    audit_intro = """【第五阶段：整体审查与最终输出】
+
+正在执行六维审查协议，请您稍候：
+
+① 正在审查剧情整体逻辑性——检查节点之间的因果关系是否连贯，前后情节能否顺畅衔接；
+② 正在审查线索的连贯性——检查每一条线索的发现、推理、指向是否前后勾连，玩家能否通过线索自然推导出下一步；
+③ 正在审查任务的可执行性——检查每个任务的目标是否明确、玩家动作是否可操作、完成条件是否可判定；
+④ 正在审查空间与剧情的匹配度——检查剧情节点是否真实落在所选景点上，同一空间的多个节点是否有区域或时段区分；
+⑤ 正在审查文化元素的融合度——检查项目所在地的本地文化是否真正进入玩法，而非简单堆砌；
+⑥ 正在审查整体实施可行性——检查互动类型是否合理、技术手段是否必要、NPC 与道具是否具备落地条件。
+
+"""
 
     # ===== 1. 生成 NPC =====
     try:
         skill_npc = Skill03d_NPCs()
         script.npcs = skill_npc.run(script)
 
-        # 最终兜底：同名人物只保留一个条目，并且最多关联两个剧情节点。
-        valid_node_ids = {node.node_id for node in script.plot_nodes}
-        node_space = {node.node_id: node.space_id for node in script.plot_nodes}
-        valid_space_ids = {space.space_id for space in script.spaces}
-        unique_npcs = []
-        seen_npc_names = set()
-        for npc in script.npcs:
-            if npc.name in seen_npc_names:
-                continue
-            seen_npc_names.add(npc.name)
-            npc.plot_node_ids = list(dict.fromkeys(
-                node_id for node_id in npc.plot_node_ids if node_id in valid_node_ids
-            ))[:MAX_CHARACTER_NODE_USES]
-            linked_spaces = [node_space[node_id] for node_id in npc.plot_node_ids if node_space.get(node_id)]
-            npc.space_ids = list(dict.fromkeys(linked_spaces or (
-                space_id for space_id in npc.space_ids if space_id in valid_space_ids
-            )))[:MAX_CHARACTER_NODE_USES]
-            unique_npcs.append(npc)
-        script.npcs = unique_npcs
-
         # 汇总 npc_dialogues：从 stage4 已生成的 state["node_dialogues"] 拿
         from schema import NPCDialogue
         all_dialogues = []
-        valid_character_names = {character.name for character in script.characters}
-        node_dialogues = _sanitize_all_node_dialogues(state, valid_character_names)
+        node_dialogues = state.get("node_dialogues", {})
         for node_id in sorted(node_dialogues.keys()):
             for d in node_dialogues[node_id]:
                 all_dialogues.append(NPCDialogue(
@@ -1540,7 +1452,7 @@ def chat(session_id: str, user_message: str) -> dict:
 
         if session_id in SESSIONS:
             state = SESSIONS[session_id]
-            resp["stage5_audit_lines"] = state.pop("stage5_audit_lines", [])
+            resp["stage5_audit_lines"] = state.get("stage5_audit_lines", [])
 
             # 特判：stage4_confirm 且已是最后一个节点，换 next_hint
             if resp.get("stage") == "stage4_confirm":
@@ -1585,10 +1497,9 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         chosen, is_region, is_custom = resolve_spot(user_message, spots)
 
         if chosen is None and is_region:
-            reply = (
-                NANXIJIANG_INTRO
-                + "\n\n"
-                + make_spot_list_reply(spots, prefix="请从楠溪江下的这些具体景区中选一个：")
+            reply = make_spot_list_reply(
+                spots,
+                prefix="您输入的是一大片区域。请从下方本地列表中选择一个具体景区，或直接输入景区全名："
             )
             state["messages"].append({"role": "user", "content": user_message})
             state["messages"].append({"role": "assistant", "content": reply})
@@ -1598,7 +1509,7 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         if chosen is None:
             reply = make_spot_list_reply(
                 spots,
-                prefix="没能识别出您想策划的景区，请从下面选一个，或输入景区全名："
+                prefix="没能识别出您想策划的景区。请从下方本地列表中选择，或直接输入任意景区全名（支持全国任意景区）："
             )
             state["messages"].append({"role": "user", "content": user_message})
             state["messages"].append({"role": "assistant", "content": reply})
@@ -1634,7 +1545,10 @@ def _chat_impl(session_id: str, user_message: str) -> dict:
         state["script"].project.cover = "https://via.placeholder.com/800x450/3498db/ffffff?text=Script+Game"
 
         skill01 = Skill01_CultureAnalysis()
-        state["script"].culture_resources = skill01.run(chosen, "沉浸式剧本游")
+        is_local_spot = chosen in spots
+        state["script"].culture_resources = skill01.run(
+            chosen, "沉浸式剧本游", use_local=is_local_spot
+        )
 
         is_local = chosen in spots
         if is_local:

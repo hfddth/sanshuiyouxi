@@ -214,8 +214,6 @@ IP 名称：{ip_name}
     - 每个元素格式：{{"npc_name": "NPC名字", "lines": ["台词1", "台词2"]}}
     - 1-2 个 NPC，每个 2-4 句
     - 【npc_name 约束 — 非常重要】npc_name 必须从上方"可用角色名单"里选，**不得自创角色**
-    - 【人物出场次数约束】同一人物在整部剧本中最多出场 2 个剧情节点；上方名单只包含尚未达到上限的人物
-    - 同一人物在当前节点只能出现 1 次；如果没有剩余可用人物，node_dialogues 输出 []
       ✗ 不要出现"老亭长""路人甲""村民"这类名单里没有的角色
       ✓ 如果本节点需要有人递请帖，用名单里的角色（如"接官亭主"）
     - 台词必须符合该角色的 role 和身份
@@ -338,6 +336,7 @@ IP 名称：{ip_name}
 - 所有字符串字段首尾不得有空格
 - name 字段不要加书名号（如《》）
 - 玩家数量必须与项目设定一致（2-4 人），用"玩家们""团队"等泛称
+- 【地域约束】所有文化依据、剧情细节必须与"项目背景"里的景区所在地一致，不得套用无关地域的文化素材
 - 同一空间多节点时，scene.description 必须描述不同区域或时段
 - interaction.type 必须在枚举内
 - culture.source 必须是文字来源，不是 CR 编号
@@ -374,8 +373,6 @@ npc_id, name, role, personality, background, appearance, appearance_mode, space_
    - 如果 NPC 就是某个已知角色的化身，直接在 name 字段用该角色名，background 里只写这个角色自身的故事，不要说"对应谁"。
 7. appearance_mode 只能是 online / offline / both
 8. space_ids 和 plot_node_ids 必须引用上方已存在的有效 ID
-   - 同一 NPC 的 plot_node_ids 最多包含 2 个节点，严禁让同一人物关联第 3 个节点
-   - space_ids 只保留上述节点实际对应的空间，最多 2 个
 9. personality、background、appearance 各不超过 80 字
 
 输出 JSON。

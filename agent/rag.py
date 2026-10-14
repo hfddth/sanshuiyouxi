@@ -3,7 +3,6 @@ RAG 检索模块：本地优先 + 相似度阈值触发 + DeepSeek 联网补充 
 """
 import os
 import httpx
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
@@ -22,7 +21,6 @@ from config import (
 # ===== 全局单例 =====
 _EMBEDDINGS = None
 _VECTORSTORE = None
-_INIT_LOCK = threading.RLock()
 _WEB_CACHE: dict[str, str] = {}
 _RETRIEVE_CACHE: dict[str, list] = {}
 
@@ -33,24 +31,20 @@ def get_embeddings():
     if _EMBEDDINGS is not None:
         return _EMBEDDINGS
 
-    with _INIT_LOCK:
-        if _EMBEDDINGS is not None:
-            return _EMBEDDINGS
-
-        try:
-            _EMBEDDINGS = HuggingFaceEmbeddings(
-                model_name=EMBEDDING_MODEL,
-                model_kwargs={"local_files_only": True},
-            )
-            print("✅ 使用本地缓存的嵌入模型")
-            return _EMBEDDINGS
-        except Exception as e:
-            print(f"⚠️ 本地没有找到模型，准备联网下载：{e}")
-
-        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-        _EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-        print("✅ 已联网下载并加载嵌入模型")
+    try:
+        _EMBEDDINGS = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            model_kwargs={"local_files_only": True},
+        )
+        print("✅ 使用本地缓存的嵌入模型")
         return _EMBEDDINGS
+    except Exception as e:
+        print(f"⚠️ 本地没有找到模型，准备联网下载：{e}")
+
+    os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+    _EMBEDDINGS = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    print("✅ 已联网下载并加载嵌入模型")
+    return _EMBEDDINGS
 
 
 def preload():
@@ -66,13 +60,11 @@ def get_vectorstore():
     if _VECTORSTORE is not None:
         return _VECTORSTORE
 
-    with _INIT_LOCK:
-        if _VECTORSTORE is None:
-            _VECTORSTORE = Chroma(
-                persist_directory=CHROMA_PERSIST_DIR,
-                embedding_function=get_embeddings(),
-            )
-        return _VECTORSTORE
+    _VECTORSTORE = Chroma(
+        persist_directory=CHROMA_PERSIST_DIR,
+        embedding_function=get_embeddings(),
+    )
+    return _VECTORSTORE
 
 
 def build_vectorstore():
@@ -190,8 +182,17 @@ def deepseek_web_search(query: str) -> str:
         return ""
 
 
-def retrieve_hybrid(query: str, k: int = 5, source_dir: str = None) -> list[str]:
-    """混合检索：本地优先，分数低于阈值时触发联网补充。"""
+def retrieve_hybrid(query: str, k: int = 5, source_dir: str = None, use_local: bool = True) -> list[str]:
+    """混合检索：本地优先，分数低于阈值时触发联网补充。
+    use_local=False 时跳过本地库，直接用联网搜索。
+    """
+    if not use_local:
+        # 完全跳过本地库，只走联网
+        if ENABLE_WEB_SEARCH and DEEPSEEK_API_KEY:
+            web_text = deepseek_web_search(query)
+            return [f"【联网搜索结果】\n{web_text}"] if web_text else []
+        return []
+
     local_docs, best_score = retrieve_with_score(query, k=k, source_dir=source_dir)
 
     if local_docs and best_score <= SIMILARITY_THRESHOLD:
@@ -213,21 +214,22 @@ def retrieve(query: str, k: int = 5, source_dir: str = None) -> list[str]:
     return retrieve_hybrid(query, k=k, source_dir=source_dir)
 
 
-def retrieve_multi_dimension(spot: str, script_type: str) -> str:
+def retrieve_multi_dimension(spot: str, script_type: str, use_local: bool = True) -> str:
     """
     分维度并行检索。四个维度同时跑，最后合并。
     """
+    # use_local=False 时，不按 source_dir 过滤本地库，直接走联网
     queries = [
-        ("【空间资料】", f"{spot} {script_type} 空间 布局 建筑", 3, "01_古村落空间"),
-        ("【民俗资料】", f"{spot} 民俗 非遗 传说 戏曲", 3, "02_非遗民俗"),
-        ("【文学资料】", f"{spot} 诗歌 文学 文人 耕读", 3, "03_文学语料"),
-        ("【政策资料】", f"{spot} 政策 产业 品牌 创建", 2, "04_政策产业"),
+        ("【空间资料】", f"{spot} {script_type} 空间 布局 建筑", 3, "01_古村落空间" if use_local else None),
+        ("【民俗资料】", f"{spot} 民俗 非遗 传说 戏曲", 3, "02_非遗民俗" if use_local else None),
+        ("【文学资料】", f"{spot} 诗歌 文学 文人 耕读", 3, "03_文学语料" if use_local else None),
+        ("【政策资料】", f"{spot} 政策 产业 品牌 创建", 2, "04_政策产业" if use_local else None),
     ]
 
     results = {}
 
     def _fetch_one(label, q, k, sd):
-        return label, retrieve_hybrid(q, k=k, source_dir=sd)
+        return label, retrieve_hybrid(q, k=k, source_dir=sd, use_local=use_local)
 
     # 并行执行
     with ThreadPoolExecutor(max_workers=4) as executor:

@@ -17,17 +17,16 @@ def _allowed_origins() -> list[str]:
     configured = os.getenv(
         "ALLOWED_ORIGINS",
         "https://hfddth.github.io,https://sanshuiyouxi.zxiehuan898572.chatgpt.site,"
-        "https://sanshuiyouxi-m2ycntgf.edgeone.cool,https://hfddth.cn,"
-        "https://www.hfddth.cn,http://localhost:5500,http://127.0.0.1:5500",
+        "https://sanshuiyouxi-m2ycntgf.edgeone.cool,http://localhost:5500,"
+        "http://127.0.0.1:5500",
     )
     return [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
 
 
-app = FastAPI(title="文旅剧本游策划 Agent", version="11")
+app = FastAPI(title="文旅剧本游策划 Agent", version="6")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins(),
-    allow_origin_regex=r"^(https://([a-z0-9-]+\.)?hfddth\.cn|http://(localhost|127\.0\.0\.1)(:\d+)?)$",
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Makers-Conversation-Id"],
@@ -62,7 +61,7 @@ class ChatResponse(BaseModel):
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"service": "sanshuiyouxi-agent", "status": "ok", "version": "11"}
+    return {"service": "sanshuiyouxi-agent", "status": "ok", "version": "6"}
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -106,7 +105,7 @@ async def health() -> dict[str, Any]:
     )
     return {
         "status": "ok" if has_knowledge else "degraded",
-        "version": "11",
+        "version": "6",
         "knowledge": "ready" if has_knowledge else "missing",
         "provider_configured": has_provider_key,
     }
