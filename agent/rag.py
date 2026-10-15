@@ -4,6 +4,7 @@ RAG 检索模块：本地优先 + 相似度阈值触发 + DeepSeek 联网补充 
 import os
 import httpx
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -23,6 +24,34 @@ _EMBEDDINGS = None
 _VECTORSTORE = None
 _WEB_CACHE: dict[str, str] = {}
 _RETRIEVE_CACHE: dict[str, list] = {}
+
+
+CATEGORY_PREFIXES = {
+    "01_古村落空间": "space",
+    "01_古城空间": "space",
+    "02_非遗民俗": "culture",
+    "03_文学语料": "literature",
+    "04_政策产业": "policy",
+    "05_空间布局（自然景观）": "landscape",
+}
+
+
+def _strip_rag_suffix(value: str) -> str:
+    """将“丽江古城rag”等资料夹名转为可匹配的景区名。"""
+    return value[:-3] if value.lower().endswith("rag") else value
+
+
+def _metadata_from_relative_path(relative_path: str) -> tuple[str, str]:
+    """兼容按景区单文件和按分类多文件两种知识库目录结构。"""
+    parts = Path(relative_path).parts
+    region = _strip_rag_suffix(parts[0]) if parts else ""
+    candidates = [Path(part).stem for part in parts[1:]]
+    category = ""
+    for candidate in candidates:
+        if candidate in CATEGORY_PREFIXES:
+            category = CATEGORY_PREFIXES[candidate]
+            break
+    return region, category
 
 
 def get_embeddings():
@@ -91,8 +120,9 @@ def build_vectorstore():
     for doc in docs:
         source = doc.metadata.get("source", "")
         rel = os.path.relpath(source, KNOWLEDGE_DIR)
-        parts = rel.split(os.sep)
-        doc.metadata["source_dir"] = parts[0] if len(parts) >= 2 else ""
+        region, category = _metadata_from_relative_path(rel)
+        doc.metadata["region"] = region
+        doc.metadata["category"] = category
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
@@ -123,7 +153,7 @@ def retrieve_with_score(query: str, k: int = 5, source_dir: str = None, max_scor
     try:
         if source_dir:
             results = vectorstore.similarity_search_with_score(
-                query, k=k, filter={"source_dir": source_dir}
+                query, k=k, filter={"category": source_dir}
             )
         else:
             results = vectorstore.similarity_search_with_score(query, k=k)
@@ -216,14 +246,15 @@ def retrieve(query: str, k: int = 5, source_dir: str = None) -> list[str]:
 
 def retrieve_multi_dimension(spot: str, script_type: str, use_local: bool = True) -> str:
     """
-    分维度并行检索。四个维度同时跑，最后合并。
+    分维度并行检索。五个维度同时跑，最后合并。
     """
     # use_local=False 时，不按 source_dir 过滤本地库，直接走联网
     queries = [
-        ("【空间资料】", f"{spot} {script_type} 空间 布局 建筑", 3, "01_古村落空间" if use_local else None),
-        ("【民俗资料】", f"{spot} 民俗 非遗 传说 戏曲", 3, "02_非遗民俗" if use_local else None),
-        ("【文学资料】", f"{spot} 诗歌 文学 文人 耕读", 3, "03_文学语料" if use_local else None),
-        ("【政策资料】", f"{spot} 政策 产业 品牌 创建", 2, "04_政策产业" if use_local else None),
+        ("【空间资料】", f"{spot} {script_type} 空间 布局 建筑", 3, "space" if use_local else None),
+        ("【民俗资料】", f"{spot} 民俗 非遗 传说 戏曲", 3, "culture" if use_local else None),
+        ("【文学资料】", f"{spot} 诗歌 文学 文人 耕读", 3, "literature" if use_local else None),
+        ("【政策资料】", f"{spot} 政策 产业 品牌 创建", 2, "policy" if use_local else None),
+        ("【自然景观资料】", f"{spot} 自然景观 地貌 水系 游线", 3, "landscape" if use_local else None),
     ]
 
     results = {}
@@ -232,7 +263,7 @@ def retrieve_multi_dimension(spot: str, script_type: str, use_local: bool = True
         return label, retrieve_hybrid(q, k=k, source_dir=sd, use_local=use_local)
 
     # 并行执行
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
             executor.submit(_fetch_one, label, q, k, sd)
             for label, q, k, sd in queries
@@ -252,12 +283,18 @@ def retrieve_multi_dimension(spot: str, script_type: str, use_local: bool = True
 
 
 def list_available_spots() -> list[str]:
-    """扫描 01_古村落空间 子目录，返回所有景区名称。"""
-    spots_dir = os.path.join(KNOWLEDGE_DIR, "01_古村落空间")
-    if not os.path.exists(spots_dir):
+    """返回知识库中的景区名，以及按景点拆分的本地资料名。"""
+    root = Path(KNOWLEDGE_DIR)
+    if not root.exists():
         return []
-    spots = []
-    for fname in os.listdir(spots_dir):
-        if fname.endswith(".md"):
-            spots.append(fname[:-3])
-    return spots
+
+    spots = set()
+    for region_dir in root.iterdir():
+        if not region_dir.is_dir():
+            continue
+        spots.add(_strip_rag_suffix(region_dir.name))
+        for md_file in region_dir.rglob("*.md"):
+            relative_parts = md_file.relative_to(region_dir).parts
+            if len(relative_parts) >= 2:
+                spots.add(md_file.stem)
+    return sorted(spots)

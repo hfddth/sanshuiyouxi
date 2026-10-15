@@ -95,7 +95,7 @@ async def get_project(session_id: str) -> dict[str, Any]:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    knowledge_dir = Path(os.getenv("KNOWLEDGE_DIR", BASE_DIR / "data" / "nanxijiang"))
+    knowledge_dir = Path(os.getenv("KNOWLEDGE_DIR", BASE_DIR / "data" / "wenlv_knowledge_base"))
     has_knowledge = knowledge_dir.exists() and any(knowledge_dir.rglob("*.md"))
     has_provider_key = bool(
         os.getenv("DEEPSEEK_API_KEY")

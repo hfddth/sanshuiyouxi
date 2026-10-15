@@ -1,0 +1,223 @@
+{
+  "title": "文旅知识库",
+  "description": "面向文旅剧本创作的多景区常驻知识资料库",
+  "archive": "resources/文旅知识库.zip",
+  "categories": [
+    {
+      "name": "凤凰古城",
+      "folder": "凤凰古城rag",
+      "files": [
+        {
+          "name": "01_古城空间.md",
+          "path": "resources/wenlv-knowledge-base/凤凰古城rag/01_古城空间.md"
+        },
+        {
+          "name": "02_非遗民俗.md",
+          "path": "resources/wenlv-knowledge-base/凤凰古城rag/02_非遗民俗.md"
+        },
+        {
+          "name": "03_文学语料.md",
+          "path": "resources/wenlv-knowledge-base/凤凰古城rag/03_文学语料.md"
+        },
+        {
+          "name": "04_政策产业.md",
+          "path": "resources/wenlv-knowledge-base/凤凰古城rag/04_政策产业.md"
+        },
+        {
+          "name": "05_空间布局（自然景观）.md",
+          "path": "resources/wenlv-knowledge-base/凤凰古城rag/05_空间布局（自然景观）.md"
+        }
+      ]
+    },
+    {
+      "name": "桂林阳朔",
+      "folder": "桂林阳朔rag",
+      "files": [
+        {
+          "name": "01_古村落空间.md",
+          "path": "resources/wenlv-knowledge-base/桂林阳朔rag/01_古村落空间.md"
+        },
+        {
+          "name": "02_非遗民俗.md",
+          "path": "resources/wenlv-knowledge-base/桂林阳朔rag/02_非遗民俗.md"
+        },
+        {
+          "name": "03_文学语料.md",
+          "path": "resources/wenlv-knowledge-base/桂林阳朔rag/03_文学语料.md"
+        },
+        {
+          "name": "04_政策产业.md",
+          "path": "resources/wenlv-knowledge-base/桂林阳朔rag/04_政策产业.md"
+        },
+        {
+          "name": "05_空间布局（自然景观）.md",
+          "path": "resources/wenlv-knowledge-base/桂林阳朔rag/05_空间布局（自然景观）.md"
+        }
+      ]
+    },
+    {
+      "name": "徽州",
+      "folder": "徽州rag",
+      "files": [
+        {
+          "name": "01_古村落空间.md",
+          "path": "resources/wenlv-knowledge-base/徽州rag/01_古村落空间.md"
+        },
+        {
+          "name": "02_非遗民俗.md",
+          "path": "resources/wenlv-knowledge-base/徽州rag/02_非遗民俗.md"
+        },
+        {
+          "name": "03_文学语料.md",
+          "path": "resources/wenlv-knowledge-base/徽州rag/03_文学语料.md"
+        },
+        {
+          "name": "04_政策产业.md",
+          "path": "resources/wenlv-knowledge-base/徽州rag/04_政策产业.md"
+        },
+        {
+          "name": "05_空间布局（自然景观）.md",
+          "path": "resources/wenlv-knowledge-base/徽州rag/05_空间布局（自然景观）.md"
+        }
+      ]
+    },
+    {
+      "name": "丽江古城",
+      "folder": "丽江古城rag",
+      "files": [
+        {
+          "name": "01_古城空间.md",
+          "path": "resources/wenlv-knowledge-base/丽江古城rag/01_古城空间.md"
+        },
+        {
+          "name": "02_非遗民俗.md",
+          "path": "resources/wenlv-knowledge-base/丽江古城rag/02_非遗民俗.md"
+        },
+        {
+          "name": "03_文学语料.md",
+          "path": "resources/wenlv-knowledge-base/丽江古城rag/03_文学语料.md"
+        },
+        {
+          "name": "04_政策产业.md",
+          "path": "resources/wenlv-knowledge-base/丽江古城rag/04_政策产业.md"
+        },
+        {
+          "name": "05_空间布局（自然景观）.md",
+          "path": "resources/wenlv-knowledge-base/丽江古城rag/05_空间布局（自然景观）.md"
+        }
+      ]
+    },
+    {
+      "name": "楠溪江",
+      "folder": "楠溪江rag",
+      "files": [
+        {
+          "name": "苍坡村.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/苍坡村.md"
+        },
+        {
+          "name": "埭头村.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/埭头村.md"
+        },
+        {
+          "name": "芙蓉村.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/芙蓉村.md"
+        },
+        {
+          "name": "林坑村.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/林坑村.md"
+        },
+        {
+          "name": "屿北村.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/屿北村.md"
+        },
+        {
+          "name": "宗族与祠堂.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/01_古村落空间/宗族与祠堂.md"
+        },
+        {
+          "name": "狮子岩竹筏漂流.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/狮子岩竹筏漂流.md"
+        },
+        {
+          "name": "温州莲花.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/温州莲花.md"
+        },
+        {
+          "name": "永嘉昆曲.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/永嘉昆曲.md"
+        },
+        {
+          "name": "永嘉乱弹.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/永嘉乱弹.md"
+        },
+        {
+          "name": "永嘉麦饼.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/永嘉麦饼.md"
+        },
+        {
+          "name": "永嘉四灵.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/永嘉四灵.md"
+        },
+        {
+          "name": "永嘉学派.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/02_非遗民俗/永嘉学派.md"
+        },
+        {
+          "name": "耕读文化与书院.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/03_文学语料/耕读文化与书院.md"
+        },
+        {
+          "name": "谢灵运诗歌语料.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/03_文学语料/谢灵运诗歌语料.md"
+        },
+        {
+          "name": "政策与产业.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/04_政策产业/政策与产业.md"
+        },
+        {
+          "name": "丽水古街.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/05_空间布局（自然景观）/丽水古街.md"
+        },
+        {
+          "name": "楠溪江游船码头.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/05_空间布局（自然景观）/楠溪江游船码头.md"
+        },
+        {
+          "name": "石桅岩.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/05_空间布局（自然景观）/石桅岩.md"
+        },
+        {
+          "name": "陶公洞.md",
+          "path": "resources/wenlv-knowledge-base/楠溪江rag/05_空间布局（自然景观）/陶公洞.md"
+        }
+      ]
+    },
+    {
+      "name": "平遥古城",
+      "folder": "平遥古城rag",
+      "files": [
+        {
+          "name": "01_古城空间.md",
+          "path": "resources/wenlv-knowledge-base/平遥古城rag/01_古城空间.md"
+        },
+        {
+          "name": "02_非遗民俗.md",
+          "path": "resources/wenlv-knowledge-base/平遥古城rag/02_非遗民俗.md"
+        },
+        {
+          "name": "03_文学语料.md",
+          "path": "resources/wenlv-knowledge-base/平遥古城rag/03_文学语料.md"
+        },
+        {
+          "name": "04_政策产业.md",
+          "path": "resources/wenlv-knowledge-base/平遥古城rag/04_政策产业.md"
+        },
+        {
+          "name": "05_空间布局（自然景观）.md",
+          "path": "resources/wenlv-knowledge-base/平遥古城rag/05_空间布局（自然景观）.md"
+        }
+      ]
+    }
+  ]
+}

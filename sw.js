@@ -1,14 +1,14 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-13';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-14';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-13',
-  './agent-config.js?v=cn-stable-13',
-  './docx-export.js?v=cn-stable-13',
-  './app.js?v=cn-stable-13',
-  './sample-script.json?v=cn-stable-13',
-  './assets/resources/nanxijiang-rag/manifest.json',
-  './assets/resources/楠溪江RAG资料.zip',
+  './styles.css?v=cn-stable-14',
+  './agent-config.js?v=cn-stable-14',
+  './docx-export.js?v=cn-stable-14',
+  './app.js?v=cn-stable-14',
+  './sample-script.json?v=cn-stable-14',
+  './assets/resources/wenlv-knowledge-base/manifest.json',
+  './assets/resources/文旅知识库.zip',
   './assets/maps/map-01.webp',
   './assets/maps/map-02.webp',
   './assets/maps/map-03.webp',

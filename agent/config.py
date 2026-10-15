@@ -44,7 +44,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 # ===== RAG =====
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5")
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", str(BASE_DIR / "chroma_db"))
-KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", str(BASE_DIR / "data" / "nanxijiang"))
+KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", str(BASE_DIR / "data" / "wenlv_knowledge_base"))
 
 ENABLE_WEB_SEARCH = _as_bool("ENABLE_WEB_SEARCH", False)
 DEEPSEEK_SEARCH_MODEL = os.getenv("DEEPSEEK_SEARCH_MODEL", "deepseek-v4-flash")
