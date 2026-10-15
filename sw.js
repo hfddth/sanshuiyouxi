@@ -1,12 +1,12 @@
-const CACHE_VERSION='sanshuiyouxi-cn-stable-14';
+const CACHE_VERSION='sanshuiyouxi-cn-stable-15';
 const CORE_ASSETS=[
   './',
   './index.html',
-  './styles.css?v=cn-stable-14',
-  './agent-config.js?v=cn-stable-14',
-  './docx-export.js?v=cn-stable-14',
-  './app.js?v=cn-stable-14',
-  './sample-script.json?v=cn-stable-14',
+  './styles.css?v=cn-stable-15',
+  './agent-config.js?v=cn-stable-15',
+  './docx-export.js?v=cn-stable-15',
+  './app.js?v=cn-stable-15',
+  './sample-script.json?v=cn-stable-15',
   './assets/resources/wenlv-knowledge-base/manifest.json',
   './assets/resources/文旅知识库.zip',
   './assets/maps/map-01.webp',
